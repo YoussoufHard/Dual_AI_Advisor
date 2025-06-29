@@ -16,7 +16,7 @@ interface ChatMessage {
 }
 
 export default function CareerCoach({ profile }: CareerCoachProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [recommendation, setRecommendation] = useState<CareerRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -26,7 +26,7 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
   const generateRecommendation = async () => {
     setLoading(true);
     try {
-      const response = await generateCareerRecommendation(profile);
+      const response = await generateCareerRecommendation(profile, language);
       // Parse the JSON response
       const parsed = JSON.parse(response);
       setRecommendation(parsed);
@@ -70,6 +70,7 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
         userMessage, 
         context, 
         'career',
+        language,
         (chunk: string) => {
           fullResponse = chunk;
           setChatMessages(prev => {

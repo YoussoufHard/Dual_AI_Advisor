@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type Language = 'fr' | 'en';
 
@@ -98,8 +98,6 @@ const translations = {
     'common.thinking': 'Réflexion...',
     'common.send': 'Envoyer',
     'common.error': 'Je m\'excuse, mais j\'ai rencontré une erreur. Veuillez réessayer votre question.',
-    'common.poweredBy': 'Propulsé par Google Gemini AI',
-    'common.tagline': 'Obtenez des conseils personnalisés en carrière et startup adaptés à votre profil unique',
 
     // Footer
     'footer.poweredBy': 'Propulsé par Google Gemini AI',
@@ -191,8 +189,6 @@ const translations = {
     'common.thinking': 'Thinking...',
     'common.send': 'Send',
     'common.error': 'I apologize, but I encountered an error. Please try asking your question again.',
-    'common.poweredBy': 'Powered by Google Gemini AI',
-    'common.tagline': 'Get personalized career and startup advice tailored to your unique profile',
 
     // Footer
     'footer.poweredBy': 'Powered by Google Gemini AI',
@@ -204,18 +200,40 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('fr');
 
   const t = (key: string): string => {
-    const keys = key.split('.');
-    let value: any = translations[language];
-    
-    for (const k of keys) {
-      value = value?.[k];
+    try {
+      const translation = translations[language]?.[key];
+      if (translation) {
+        return translation;
+      }
+      
+      // Fallback to English if French translation not found
+      const fallback = translations['en']?.[key];
+      if (fallback) {
+        return fallback;
+      }
+      
+      // If no translation found, return the key itself
+      console.warn(`Translation missing for key: ${key}`);
+      return key;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return key;
     }
-    
-    return value || key;
+  };
+
+  // Debug: Log when language changes
+  useEffect(() => {
+    console.log('Language changed to:', language);
+  }, [language]);
+
+  const value = {
+    language,
+    setLanguage,
+    t
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

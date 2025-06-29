@@ -16,7 +16,7 @@ interface ChatMessage {
 }
 
 export default function StartupCoach({ profile }: StartupCoachProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [recommendation, setRecommendation] = useState<StartupRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -26,7 +26,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
   const generateRecommendation = async () => {
     setLoading(true);
     try {
-      const response = await generateStartupRecommendation(profile);
+      const response = await generateStartupRecommendation(profile, language);
       // Parse the JSON response
       const parsed = JSON.parse(response);
       setRecommendation(parsed);
@@ -66,6 +66,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
         userMessage, 
         context, 
         'startup',
+        language,
         (chunk: string) => {
           fullResponse = chunk;
           setChatMessages(prev => {
