@@ -1,475 +1,397 @@
 import { createClient } from '@supabase/supabase-js';
-import { UserProfile } from '../types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Types pour la base de données
-export interface DatabaseUser {
-  id: string;
-  email: string;
-  name: string;
-  avatar_url?: string;
-  current_role?: string;
-  years_experience: number;
-  experience_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
-  industry?: string;
-  goals: 'employment' | 'entrepreneurship' | 'both';
-  skills: string[];
-  interests: string[];
-  preferences: Record<string, any>;
-  metadata: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-  last_active_at: string;
-  is_active: boolean;
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Please check your .env file.');
 }
 
-export interface DatabaseRecommendation {
-  id: string;
-  user_id: string;
-  type: 'career' | 'startup';
-  model_id: string;
-  input_data: Record<string, any>;
-  output_data: Record<string, any>;
-  confidence_score: number;
-  feedback?: 'positive' | 'negative' | 'neutral';
-  implementation_status: 'not_started' | 'in_progress' | 'completed';
-  created_at: string;
-  updated_at: string;
-}
-
-export interface DatabaseAnalyticsEvent {
-  id: string;
-  user_id?: string;
-  session_id?: string;
-  event_name: string;
-  event_properties: Record<string, any>;
-  timestamp: string;
-  processed: boolean;
-}
-
-// Service pour la gestion des utilisateurs
-export class UserService {
-  static async createOrUpdateUser(profile: UserProfile): Promise<DatabaseUser> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
     }
+  }
+});
 
-    const userData = {
-      id: user.id,
-      email: user.email!,
-      name: profile.name,
-      current_role: profile.currentRole,
-      years_experience: profile.yearsExperience,
-      experience_level: profile.experienceLevel,
-      industry: profile.industry,
-      goals: profile.goals,
-      skills: profile.skills,
-      interests: profile.interests,
-      updated_at: new Date().toISOString()
+// Database types based on our schema
+export interface Database {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          id: string;
+          email: string;
+          name: string;
+          avatar_url?: string;
+          role_title?: string;
+          years_experience: number;
+          experience_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+          industry?: string;
+          goals: 'employment' | 'entrepreneurship' | 'both';
+          skills: string[];
+          interests: string[];
+          preferences: Record<string, any>;
+          metadata: Record<string, any>;
+          created_at: string;
+          updated_at: string;
+          last_active_at: string;
+          is_active: boolean;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name: string;
+          avatar_url?: string;
+          role_title?: string;
+          years_experience?: number;
+          experience_level?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+          industry?: string;
+          goals?: 'employment' | 'entrepreneurship' | 'both';
+          skills?: string[];
+          interests?: string[];
+          preferences?: Record<string, any>;
+          metadata?: Record<string, any>;
+          created_at?: string;
+          updated_at?: string;
+          last_active_at?: string;
+          is_active?: boolean;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          name?: string;
+          avatar_url?: string;
+          role_title?: string;
+          years_experience?: number;
+          experience_level?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+          industry?: string;
+          goals?: 'employment' | 'entrepreneurship' | 'both';
+          skills?: string[];
+          interests?: string[];
+          preferences?: Record<string, any>;
+          metadata?: Record<string, any>;
+          created_at?: string;
+          updated_at?: string;
+          last_active_at?: string;
+          is_active?: boolean;
+        };
+      };
+      recommendations: {
+        Row: {
+          id: string;
+          user_id: string;
+          recommendation_type: 'career' | 'startup';
+          model_id: string;
+          input_data: Record<string, any>;
+          output_data: Record<string, any>;
+          confidence_score?: number;
+          feedback?: 'positive' | 'negative' | 'neutral';
+          implementation_status: 'not_started' | 'in_progress' | 'completed';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          recommendation_type: 'career' | 'startup';
+          model_id: string;
+          input_data: Record<string, any>;
+          output_data: Record<string, any>;
+          confidence_score?: number;
+          feedback?: 'positive' | 'negative' | 'neutral';
+          implementation_status?: 'not_started' | 'in_progress' | 'completed';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          recommendation_type?: 'career' | 'startup';
+          model_id?: string;
+          input_data?: Record<string, any>;
+          output_data?: Record<string, any>;
+          confidence_score?: number;
+          feedback?: 'positive' | 'negative' | 'neutral';
+          implementation_status?: 'not_started' | 'in_progress' | 'completed';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      analytics_events: {
+        Row: {
+          id: string;
+          user_id?: string;
+          session_id?: string;
+          event_name: string;
+          event_properties: Record<string, any>;
+          event_timestamp: string;
+          processed: boolean;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          session_id?: string;
+          event_name: string;
+          event_properties?: Record<string, any>;
+          event_timestamp?: string;
+          processed?: boolean;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          session_id?: string;
+          event_name?: string;
+          event_properties?: Record<string, any>;
+          event_timestamp?: string;
+          processed?: boolean;
+        };
+      };
+      skill_classifications: {
+        Row: {
+          id: string;
+          skill_name: string;
+          category: string;
+          subcategory?: string;
+          market_demand_score?: number;
+          rarity_score?: number;
+          growth_trend?: 'increasing' | 'stable' | 'decreasing';
+          related_skills: string[];
+          updated_at: string;
+        };
+      };
+      market_data: {
+        Row: {
+          id: string;
+          industry: string;
+          region: string;
+          job_title?: string;
+          average_salary_min?: number;
+          average_salary_max?: number;
+          demand_level?: 'low' | 'medium' | 'high' | 'very_high';
+          growth_rate?: number;
+          required_skills: string[];
+          data_source?: string;
+          collected_at: string;
+        };
+      };
     };
+    Functions: {
+      calculate_user_engagement: {
+        Args: { user_uuid: string };
+        Returns: number;
+      };
+      get_user_analytics_summary: {
+        Args: { user_uuid: string };
+        Returns: Record<string, any>;
+      };
+      refresh_dashboard_analytics: {
+        Args: {};
+        Returns: void;
+      };
+    };
+  };
+}
 
+// Service classes for database operations
+export class UserService {
+  static async createOrUpdateUser(userData: Database['public']['Tables']['users']['Insert']) {
     const { data, error } = await supabase
       .from('users')
-      .upsert(userData)
+      .upsert(userData, { onConflict: 'email' })
       .select()
       .single();
 
-    if (error) {
-      throw new Error(`Failed to save user profile: ${error.message}`);
-    }
-
+    if (error) throw error;
     return data;
   }
 
-  static async getUserProfile(): Promise<DatabaseUser | null> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return null;
-    }
-
+  static async getUserProfile(userId: string) {
     const { data, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
-    if (error && error.code !== 'PGRST116') {
-      throw new Error(`Failed to fetch user profile: ${error.message}`);
-    }
-
+    if (error) throw error;
     return data;
   }
 
-  static async updateLastActive(): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return;
-
-    await supabase
+  static async updateLastActive(userId: string) {
+    const { error } = await supabase
       .from('users')
       .update({ last_active_at: new Date().toISOString() })
-      .eq('id', user.id);
+      .eq('id', userId);
+
+    if (error) throw error;
+  }
+
+  static async getUserEngagement(userId: string) {
+    const { data, error } = await supabase
+      .rpc('calculate_user_engagement', { user_uuid: userId });
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async getUserAnalyticsSummary(userId: string) {
+    const { data, error } = await supabase
+      .rpc('get_user_analytics_summary', { user_uuid: userId });
+
+    if (error) throw error;
+    return data;
   }
 }
 
-// Service pour les recommandations
 export class RecommendationService {
-  static async saveRecommendation(
-    type: 'career' | 'startup',
-    modelId: string,
-    inputData: Record<string, any>,
-    outputData: Record<string, any>,
-    confidenceScore: number
-  ): Promise<DatabaseRecommendation> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
+  static async saveRecommendation(recommendation: Database['public']['Tables']['recommendations']['Insert']) {
     const { data, error } = await supabase
       .from('recommendations')
-      .insert({
-        user_id: user.id,
-        type,
-        model_id: modelId,
-        input_data: inputData,
-        output_data: outputData,
-        confidence_score: confidenceScore
-      })
+      .insert(recommendation)
       .select()
       .single();
 
-    if (error) {
-      throw new Error(`Failed to save recommendation: ${error.message}`);
-    }
-
+    if (error) throw error;
     return data;
   }
 
-  static async getUserRecommendations(type?: 'career' | 'startup'): Promise<DatabaseRecommendation[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return [];
-    }
-
+  static async getUserRecommendations(userId: string, type?: 'career' | 'startup') {
     let query = supabase
       .from('recommendations')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (type) {
-      query = query.eq('type', type);
+      query = query.eq('recommendation_type', type);
     }
 
     const { data, error } = await query;
-
-    if (error) {
-      throw new Error(`Failed to fetch recommendations: ${error.message}`);
-    }
-
-    return data || [];
+    if (error) throw error;
+    return data;
   }
 
   static async updateRecommendationFeedback(
-    recommendationId: string,
+    recommendationId: string, 
     feedback: 'positive' | 'negative' | 'neutral'
-  ): Promise<void> {
-    const { error } = await supabase
+  ) {
+    const { data, error } = await supabase
       .from('recommendations')
-      .update({ 
-        feedback,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', recommendationId);
+      .update({ feedback, updated_at: new Date().toISOString() })
+      .eq('id', recommendationId)
+      .select()
+      .single();
 
-    if (error) {
-      throw new Error(`Failed to update feedback: ${error.message}`);
-    }
+    if (error) throw error;
+    return data;
   }
 }
 
-// Service pour les analytics
 export class AnalyticsService {
-  static async trackEvent(
-    eventName: string,
-    properties: Record<string, any> = {},
-    sessionId?: string
-  ): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const { error } = await supabase
-      .from('analytics_events')
-      .insert({
-        user_id: user?.id,
-        session_id: sessionId,
-        event_name: eventName,
-        event_properties: properties
-      });
-
-    if (error) {
-      console.error('Failed to track event:', error);
-    }
-  }
-
-  static async trackUserInteraction(
-    eventType: string,
-    eventData: Record<string, any>,
-    sessionId: string,
-    elementId?: string
-  ): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('user_interactions')
-      .insert({
-        user_id: user.id,
-        session_id: sessionId,
-        event_type: eventType,
-        event_data: eventData,
-        page_url: window.location.href,
-        element_id: elementId
-      });
-
-    if (error) {
-      console.error('Failed to track interaction:', error);
-    }
-  }
-
-  static async getAnalyticsDashboard(): Promise<any> {
-    // Récupérer les métriques du dashboard
+  static async trackEvent(event: Database['public']['Tables']['analytics_events']['Insert']) {
     const { data, error } = await supabase
+      .from('analytics_events')
+      .insert(event);
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async getAnalyticsDashboard() {
+    // Get dashboard analytics
+    const { data: dashboardData, error: dashboardError } = await supabase
       .from('dashboard_analytics')
       .select('*')
       .order('date', { ascending: false })
       .limit(30);
 
-    if (error) {
-      throw new Error(`Failed to fetch dashboard analytics: ${error.message}`);
-    }
+    if (dashboardError) throw dashboardError;
 
-    return data;
-  }
-
-  static async getUserEngagementScore(): Promise<number> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return 0;
-
-    const { data, error } = await supabase
-      .rpc('calculate_user_engagement', { user_uuid: user.id });
-
-    if (error) {
-      console.error('Failed to calculate engagement:', error);
-      return 0;
-    }
-
-    return data || 0;
-  }
-}
-
-// Service pour les prédictions ML
-export class MLPredictionService {
-  static async savePrediction(
-    modelId: string,
-    modelVersion: string,
-    predictionType: string,
-    inputFeatures: Record<string, any>,
-    predictionResult: Record<string, any>,
-    confidenceScore: number,
-    executionTimeMs: number
-  ): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('ml_predictions')
-      .insert({
-        user_id: user.id,
-        model_id: modelId,
-        model_version: modelVersion,
-        prediction_type: predictionType,
-        input_features: inputFeatures,
-        prediction_result: predictionResult,
-        confidence_score: confidenceScore,
-        execution_time_ms: executionTimeMs
-      });
-
-    if (error) {
-      console.error('Failed to save ML prediction:', error);
-    }
-  }
-
-  static async getUserPredictions(predictionType?: string): Promise<any[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return [];
-
-    let query = supabase
-      .from('ml_predictions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (predictionType) {
-      query = query.eq('prediction_type', predictionType);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Failed to fetch predictions:', error);
-      return [];
-    }
-
-    return data || [];
-  }
-}
-
-// Service pour les données de marché
-export class MarketDataService {
-  static async getSkillClassifications(): Promise<any[]> {
-    const { data, error } = await supabase
+    // Get skill classifications
+    const { data: skillsData, error: skillsError } = await supabase
       .from('skill_classifications')
       .select('*')
-      .order('market_demand_score', { ascending: false });
+      .order('market_demand_score', { ascending: false })
+      .limit(10);
 
-    if (error) {
-      throw new Error(`Failed to fetch skill classifications: ${error.message}`);
-    }
+    if (skillsError) throw skillsError;
 
-    return data || [];
-  }
-
-  static async getMarketData(industry?: string): Promise<any[]> {
-    let query = supabase
+    // Get market data
+    const { data: marketData, error: marketError } = await supabase
       .from('market_data')
       .select('*')
-      .order('collected_at', { ascending: false });
+      .order('growth_rate', { ascending: false })
+      .limit(10);
 
-    if (industry) {
-      query = query.eq('industry', industry);
-    }
+    if (marketError) throw marketError;
 
-    const { data, error } = await query;
-
-    if (error) {
-      throw new Error(`Failed to fetch market data: ${error.message}`);
-    }
-
-    return data || [];
-  }
-
-  static async getIndustryInsights(industry: string): Promise<any> {
-    const { data, error } = await supabase
-      .from('market_data')
-      .select('*')
-      .eq('industry', industry);
-
-    if (error) {
-      throw new Error(`Failed to fetch industry insights: ${error.message}`);
-    }
-
-    // Calculer des insights agrégés
-    const insights = {
-      averageSalary: 0,
-      demandLevel: 'medium',
-      growthRate: 0,
-      topSkills: [],
-      jobCount: data?.length || 0
+    return {
+      dashboard: dashboardData,
+      topSkills: skillsData,
+      marketTrends: marketData
     };
+  }
 
-    if (data && data.length > 0) {
-      insights.averageSalary = data.reduce((sum, item) => 
-        sum + ((item.average_salary_min + item.average_salary_max) / 2), 0) / data.length;
-      
-      insights.growthRate = data.reduce((sum, item) => 
-        sum + (item.growth_rate || 0), 0) / data.length;
-      
-      // Extraire les compétences les plus demandées
-      const skillCounts: Record<string, number> = {};
-      data.forEach(item => {
-        if (item.required_skills) {
-          item.required_skills.forEach((skill: string) => {
-            skillCounts[skill] = (skillCounts[skill] || 0) + 1;
-          });
-        }
-      });
-      
-      insights.topSkills = Object.entries(skillCounts)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5)
-        .map(([skill]) => skill);
-    }
-
-    return insights;
+  static async refreshDashboard() {
+    const { error } = await supabase.rpc('refresh_dashboard_analytics');
+    if (error) throw error;
   }
 }
 
-// Hook React pour Supabase
-import { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+// Real-time subscriptions
+export class RealtimeService {
+  static subscribeToUserEvents(userId: string, callback: (payload: any) => void) {
+    return supabase
+      .channel(`user-events-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'analytics_events',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe();
+  }
 
-export function useSupabaseAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  static subscribeToRecommendations(userId: string, callback: (payload: any) => void) {
+    return supabase
+      .channel(`recommendations-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'recommendations',
+          filter: `user_id=eq.${userId}`
+        },
+        callback
+      )
+      .subscribe();
+  }
 
-  useEffect(() => {
-    // Récupérer l'utilisateur actuel
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    if (error) throw error;
-  };
-
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password
-    });
-    if (error) throw error;
-  };
-
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  };
-
-  return {
-    user,
-    loading,
-    signIn,
-    signUp,
-    signOut
-  };
+  static subscribeToDashboardUpdates(callback: (payload: any) => void) {
+    return supabase
+      .channel('dashboard-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'users'
+        },
+        callback
+      )
+      .subscribe();
+  }
 }
+
+export default supabase;
