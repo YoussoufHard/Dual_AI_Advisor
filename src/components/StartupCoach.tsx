@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StartupRecommendation, UserProfile } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAnalytics } from '../services/analytics';
 import { generateStartupRecommendation, generateFollowUpResponseStreaming } from '../services/geminiApi';
 import { Lightbulb, Rocket, DollarSign, TrendingUp, MessageCircle, Send, Loader } from 'lucide-react';
 import StreamingMessage from './StreamingMessage';
@@ -17,6 +18,7 @@ interface ChatMessage {
 
 export default function StartupCoach({ profile }: StartupCoachProps) {
   const { t, language } = useLanguage();
+  const analytics = useAnalytics();
   const [recommendation, setRecommendation] = useState<StartupRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -25,13 +27,24 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
 
   const generateRecommendation = async () => {
     setLoading(true);
+    analytics.trackButtonClick('generate_startup_recommendation', 'startup_coach');
+    
+    const startTime = performance.now();
+    
     try {
       const response = await generateStartupRecommendation(profile, language);
       // Parse the JSON response
       const parsed = JSON.parse(response);
       setRecommendation(parsed);
+      
+      const endTime = performance.now();
+      analytics.trackPerformance('recommendation_generation_time', endTime - startTime, 'startup');
+      analytics.trackRecommendationGenerated('startup', profile);
+      
     } catch (error) {
       console.error('Error generating recommendation:', error);
+      analytics.trackError('startup_recommendation_generation_failed', JSON.stringify(error));
+      
       // Fallback recommendation
       setRecommendation({
         idea: `A platform that combines ${profile.interests[0]} with ${profile.skills[0]} to solve real-world problems in the ${profile.industry} industry.`,
@@ -50,6 +63,8 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
     if (!chatInput.trim() || chatLoading) return;
 
     const userMessage = chatInput.trim();
+    analytics.trackChatMessage(userMessage, 'user', 'startup');
+    
     setChatMessages(prev => [...prev, { type: 'user', content: userMessage }]);
     setChatInput('');
     setChatLoading(true);
@@ -92,7 +107,11 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
         return newMessages;
       });
 
+      analytics.trackChatMessage(fullResponse, 'ai', 'startup');
+
     } catch (error) {
+      analytics.trackError('startup_chat_response_failed', JSON.stringify(error));
+      
       setChatMessages(prev => {
         const newMessages = [...prev];
         newMessages[aiMessageIndex] = { 
@@ -212,7 +231,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
               </h4>
             </div>
             
-            <div className="p-4 max-h-96 overflow-y-auto space-y-4">
+            <div className="p-4 max-h-96 overflow-y-auto space-y-2">
               {chatMessages.length === 0 && (
                 <div className="text-gray-500 text-center py-8">
                   {t('startup.chat.empty')}

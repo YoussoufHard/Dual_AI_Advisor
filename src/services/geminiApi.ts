@@ -57,7 +57,7 @@ export async function callGeminiApi(prompt: string): Promise<string> {
   }
 }
 
-// Nouvelle fonction pour le streaming des réponses de chat
+// Fonction améliorée pour le streaming avec effet d'écriture fluide
 export async function callGeminiApiStreaming(
   prompt: string, 
   onChunk: (chunk: string) => void
@@ -88,16 +88,29 @@ export async function callGeminiApiStreaming(
     const data: GeminiResponse = await response.json();
     const fullText = data.candidates[0]?.content?.parts[0]?.text || 'No response generated';
     
-    // Simuler le streaming en envoyant le texte par chunks
-    const words = fullText.split(' ');
+    // Simuler le streaming caractère par caractère pour un effet plus fluide
     let currentText = '';
     
-    for (let i = 0; i < words.length; i++) {
-      currentText += (i > 0 ? ' ' : '') + words[i];
+    for (let i = 0; i < fullText.length; i++) {
+      currentText += fullText[i];
       onChunk(currentText);
       
-      // Délai entre les mots pour simuler la frappe
-      await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
+      // Délai variable pour un effet plus naturel
+      const char = fullText[i];
+      let delay = 20; // Délai de base
+      
+      // Pauses plus longues après la ponctuation
+      if (char === '.' || char === '!' || char === '?') {
+        delay = 200;
+      } else if (char === ',' || char === ';') {
+        delay = 100;
+      } else if (char === ' ') {
+        delay = 30;
+      } else if (char === '\n') {
+        delay = 150;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, delay + Math.random() * 20));
     }
     
     return fullText;

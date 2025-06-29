@@ -1,19 +1,30 @@
 import React, { useState } from 'react';
 import { UserProfile } from './types';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { useAnalytics } from './services/analytics';
 import ProfileForm from './components/ProfileForm';
 import CareerCoach from './components/CareerCoach';
 import StartupCoach from './components/StartupCoach';
+import AdminDashboard from './components/Dashboard/AdminDashboard';
 import LanguageToggle from './components/LanguageToggle';
-import { Briefcase, Rocket, ArrowLeft, Bot } from 'lucide-react';
+import { Briefcase, Rocket, ArrowLeft, Bot, BarChart3 } from 'lucide-react';
 
 function AppContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [activeMode, setActiveMode] = useState<'career' | 'startup' | null>(null);
+  const [activeMode, setActiveMode] = useState<'career' | 'startup' | 'dashboard' | null>(null);
   const { t } = useLanguage();
+  const analytics = useAnalytics();
 
   const handleProfileSubmit = (userProfile: UserProfile) => {
     setProfile(userProfile);
+    analytics.track('profile_completed', {
+      skillsCount: userProfile.skills.length,
+      interestsCount: userProfile.interests.length,
+      experienceLevel: userProfile.experienceLevel,
+      goals: userProfile.goals,
+      industry: userProfile.industry
+    });
+    
     // Auto-select mode based on user goals
     if (userProfile.goals === 'employment') {
       setActiveMode('career');
@@ -26,6 +37,12 @@ function AppContent() {
   const resetToProfile = () => {
     setProfile(null);
     setActiveMode(null);
+    analytics.trackButtonClick('edit_profile', 'header');
+  };
+
+  const handleModeChange = (mode: 'career' | 'startup' | 'dashboard') => {
+    setActiveMode(mode);
+    analytics.trackButtonClick(`switch_to_${mode}`, 'mode_selection');
   };
 
   return (
@@ -46,6 +63,20 @@ function AppContent() {
             
             <div className="flex items-center space-x-4">
               <LanguageToggle />
+              
+              {/* Dashboard Access */}
+              <button
+                onClick={() => handleModeChange('dashboard')}
+                className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                  activeMode === 'dashboard'
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Analytics
+              </button>
+              
               {profile && (
                 <button
                   onClick={resetToProfile}
@@ -61,7 +92,10 @@ function AppContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!profile ? (
+        {activeMode === 'dashboard' ? (
+          /* Analytics Dashboard */
+          <AdminDashboard />
+        ) : !profile ? (
           /* Profile Form */
           <ProfileForm onSubmit={handleProfileSubmit} />
         ) : (
@@ -80,7 +114,7 @@ function AppContent() {
             {!activeMode && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <button
-                  onClick={() => setActiveMode('career')}
+                  onClick={() => handleModeChange('career')}
                   className="group p-8 bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-blue-500 transition-all transform hover:scale-105"
                 >
                   <div className="text-center">
@@ -98,7 +132,7 @@ function AppContent() {
                 </button>
 
                 <button
-                  onClick={() => setActiveMode('startup')}
+                  onClick={() => handleModeChange('startup')}
                   className="group p-8 bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-orange-500 transition-all transform hover:scale-105"
                 >
                   <div className="text-center">
@@ -118,11 +152,11 @@ function AppContent() {
             )}
 
             {/* Mode Switch Tabs */}
-            {activeMode && (
+            {activeMode && activeMode !== 'dashboard' && (
               <div className="flex justify-center mb-8">
                 <div className="bg-white rounded-lg p-1 shadow-lg">
                   <button
-                    onClick={() => setActiveMode('career')}
+                    onClick={() => handleModeChange('career')}
                     className={`flex items-center px-6 py-3 rounded-md font-medium transition-all ${
                       activeMode === 'career'
                         ? 'bg-blue-500 text-white shadow-md'
@@ -133,7 +167,7 @@ function AppContent() {
                     {t('mode.career.title')}
                   </button>
                   <button
-                    onClick={() => setActiveMode('startup')}
+                    onClick={() => handleModeChange('startup')}
                     className={`flex items-center px-6 py-3 rounded-md font-medium transition-all ${
                       activeMode === 'startup'
                         ? 'bg-orange-500 text-white shadow-md'

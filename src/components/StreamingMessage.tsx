@@ -34,28 +34,35 @@ export default function StreamingMessage({
   onStreamComplete 
 }: StreamingMessageProps) {
   const { displayedText, isComplete } = useStreamingText(content, isStreaming, {
-    speed: 20, // Plus rapide pour une meilleure UX
+    speed: 15, // Vitesse optimisée pour un effet fluide
     onComplete: onStreamComplete
   });
 
   return (
-    <div className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex ${type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
       <div
-        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg relative ${
+        className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl relative ${
           type === 'user'
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-200 text-gray-800'
+            ? 'bg-blue-500 text-white rounded-br-sm'
+            : 'bg-gray-100 text-gray-800 rounded-bl-sm'
         }`}
       >
         {type === 'ai' ? (
-          <MarkdownText content={displayedText} />
+          <div className="relative">
+            <MarkdownText content={displayedText} />
+            {/* Curseur clignotant uniquement pendant la frappe */}
+            {isStreaming && !isComplete && (
+              <span className="inline-block w-0.5 h-4 bg-gray-600 ml-1 animate-pulse" />
+            )}
+          </div>
         ) : (
-          displayedText
-        )}
-        
-        {/* Curseur clignotant pendant la frappe */}
-        {isStreaming && !isComplete && (
-          <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
+          <div className="relative">
+            {displayedText}
+            {/* Curseur pour les messages utilisateur aussi si nécessaire */}
+            {isStreaming && !isComplete && (
+              <span className="inline-block w-0.5 h-4 bg-white ml-1 animate-pulse" />
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CareerRecommendation, UserProfile } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAnalytics } from '../services/analytics';
 import { generateCareerRecommendation, generateFollowUpResponseStreaming } from '../services/geminiApi';
 import { Briefcase, Target, Calendar, MessageCircle, Send, Loader } from 'lucide-react';
 import StreamingMessage from './StreamingMessage';
@@ -17,6 +18,7 @@ interface ChatMessage {
 
 export default function CareerCoach({ profile }: CareerCoachProps) {
   const { t, language } = useLanguage();
+  const analytics = useAnalytics();
   const [recommendation, setRecommendation] = useState<CareerRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -25,13 +27,24 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
 
   const generateRecommendation = async () => {
     setLoading(true);
+    analytics.trackButtonClick('generate_career_recommendation', 'career_coach');
+    
+    const startTime = performance.now();
+    
     try {
       const response = await generateCareerRecommendation(profile, language);
       // Parse the JSON response
       const parsed = JSON.parse(response);
       setRecommendation(parsed);
+      
+      const endTime = performance.now();
+      analytics.trackPerformance('recommendation_generation_time', endTime - startTime, 'career');
+      analytics.trackRecommendationGenerated('career', profile);
+      
     } catch (error) {
       console.error('Error generating recommendation:', error);
+      analytics.trackError('career_recommendation_generation_failed', JSON.stringify(error));
+      
       // Fallback recommendation
       setRecommendation({
         jobTitle: 'Full Stack Developer',
@@ -54,6 +67,8 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
     if (!chatInput.trim() || chatLoading) return;
 
     const userMessage = chatInput.trim();
+    analytics.trackChatMessage(userMessage, 'user', 'career');
+    
     setChatMessages(prev => [...prev, { type: 'user', content: userMessage }]);
     setChatInput('');
     setChatLoading(true);
@@ -96,7 +111,11 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
         return newMessages;
       });
 
+      analytics.trackChatMessage(fullResponse, 'ai', 'career');
+
     } catch (error) {
+      analytics.trackError('career_chat_response_failed', JSON.stringify(error));
+      
       setChatMessages(prev => {
         const newMessages = [...prev];
         newMessages[aiMessageIndex] = { 
@@ -206,7 +225,7 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
               </h4>
             </div>
             
-            <div className="p-4 max-h-96 overflow-y-auto space-y-4">
+            <div className="p-4 max-h-96 overflow-y-auto space-y-2">
               {chatMessages.length === 0 && (
                 <div className="text-gray-500 text-center py-8">
                   {t('career.chat.empty')}
