@@ -1,3 +1,201 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* CSS Custom Properties for Theme System */
+:root {
+  --primary-color: #3B82F6;
+  --accent-color: #8B5CF6;
+}
+
+/* Theme Classes */
+.light {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Border Radius Classes */
+.radius-none * {
+  border-radius: 0 !important;
+}
+
+.radius-small * {
+  border-radius: 0.25rem !important;
+}
+
+.radius-medium * {
+  border-radius: 0.5rem !important;
+}
+
+.radius-large * {
+  border-radius: 1rem !important;
+}
+
+/* Font Size Classes */
+.font-small {
+  font-size: 0.875rem;
+}
+
+.font-medium {
+  font-size: 1rem;
+}
+
+.font-large {
+  font-size: 1.125rem;
+}
+
+/* Animation Classes */
+.no-animations * {
+  animation: none !important;
+  transition: none !important;
+}
+
+.reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Custom Utilities */
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.text-primary {
+  color: var(--primary-color);
+}
+
+.border-primary {
+  border-color: var(--primary-color);
+}
+
+.bg-accent {
+  background-color: var(--accent-color);
+}
+
+.text-accent {
+  color: var(--accent-color);
+}
+
+.border-accent {
+  border-color: var(--accent-color);
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus Styles for Accessibility */
+*:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Loading Animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass Effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform 0.2s ease-in-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  * {
+    color: black !important;
+    background: white !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  * {
+    border-color: black !important;
+  }
+  
+  .dark * {
+    border-color: white !important;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

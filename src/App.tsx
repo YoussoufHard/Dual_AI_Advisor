@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from './types';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { ThemeProvider } from './components/ThemeProvider/ThemeProvider';
+import { NotificationProvider } from './components/Notifications/NotificationProvider';
+import { GamificationProvider } from './components/Gamification/GamificationProvider';
+import { LocationProvider } from './components/Geolocation/LocationProvider';
 import { useAnalytics } from './services/analytics';
 import { useSupabaseAuth, UserService } from './services/supabaseClient';
 import ProfileForm from './components/ProfileForm';
@@ -10,11 +14,18 @@ import AdminDashboard from './components/Dashboard/AdminDashboard';
 import RealTimeAnalytics from './components/Dashboard/RealTimeAnalytics';
 import AuthModal from './components/Auth/AuthModal';
 import LanguageToggle from './components/LanguageToggle';
-import { Briefcase, Rocket, ArrowLeft, Bot, BarChart3, Database, LogIn, LogOut } from 'lucide-react';
+import ThemeCustomizer from './components/ThemeProvider/ThemeCustomizer';
+import NotificationCenter from './components/Notifications/NotificationCenter';
+import GamificationPanel from './components/Gamification/GamificationPanel';
+import AdvancedSearch from './components/Search/AdvancedSearch';
+import ExportManager from './components/Export/ExportManager';
+import LocalOpportunities from './components/Geolocation/LocalOpportunities';
+import PWAInstallPrompt from './components/PWA/PWAInstallPrompt';
+import { Briefcase, Rocket, ArrowLeft, Bot, BarChart3, Database, LogIn, LogOut, Search, Trophy, MapPin } from 'lucide-react';
 
 function AppContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [activeMode, setActiveMode] = useState<'career' | 'startup' | 'dashboard' | 'analytics' | null>(null);
+  const [activeMode, setActiveMode] = useState<'career' | 'startup' | 'dashboard' | 'analytics' | 'search' | 'gamification' | 'local' | null>(null);
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'signin' | 'signup' }>({
     isOpen: false,
     mode: 'signin'
@@ -81,7 +92,7 @@ function AppContent() {
     analytics.trackButtonClick('edit_profile', 'header');
   };
 
-  const handleModeChange = (mode: 'career' | 'startup' | 'dashboard' | 'analytics') => {
+  const handleModeChange = (mode: 'career' | 'startup' | 'dashboard' | 'analytics' | 'search' | 'gamification' | 'local') => {
     setActiveMode(mode);
     analytics.trackButtonClick(`switch_to_${mode}`, 'mode_selection');
   };
@@ -98,16 +109,16 @@ function AppContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -115,8 +126,8 @@ function AppContent() {
                 <Bot className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{t('header.title')}</h1>
-                <p className="text-sm text-gray-600">{t('header.subtitle')}</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('header.title')}</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{t('header.subtitle')}</p>
               </div>
             </div>
             
@@ -125,13 +136,55 @@ function AppContent() {
               
               {user && (
                 <>
+                  {/* Notifications */}
+                  <NotificationCenter />
+                  
+                  {/* Local Opportunities */}
+                  <button
+                    onClick={() => handleModeChange('local')}
+                    className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                      activeMode === 'local'
+                        ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <MapPin className="w-4 h-4 mr-2" />
+                    Local
+                  </button>
+                  
+                  {/* Search */}
+                  <button
+                    onClick={() => handleModeChange('search')}
+                    className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                      activeMode === 'search'
+                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <Search className="w-4 h-4 mr-2" />
+                    Recherche
+                  </button>
+                  
+                  {/* Gamification */}
+                  <button
+                    onClick={() => handleModeChange('gamification')}
+                    className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                      activeMode === 'gamification'
+                        ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <Trophy className="w-4 h-4 mr-2" />
+                    Progression
+                  </button>
+                  
                   {/* Analytics Access */}
                   <button
                     onClick={() => handleModeChange('analytics')}
                     className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
                       activeMode === 'analytics'
-                        ? 'bg-green-100 text-green-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
                     }`}
                   >
                     <Database className="w-4 h-4 mr-2" />
@@ -143,18 +196,21 @@ function AppContent() {
                     onClick={() => handleModeChange('dashboard')}
                     className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
                       activeMode === 'dashboard'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
                     }`}
                   >
                     <BarChart3 className="w-4 h-4 mr-2" />
                     Analytics
                   </button>
                   
+                  {/* Export Manager */}
+                  <ExportManager />
+                  
                   {profile && (
                     <button
                       onClick={resetToProfile}
-                      className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                      className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                     >
                       <ArrowLeft className="w-4 h-4 mr-2" />
                       {t('header.editProfile')}
@@ -163,7 +219,7 @@ function AppContent() {
                   
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center px-4 py-2 text-red-600 hover:text-red-700 transition-colors"
+                    className="flex items-center px-4 py-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
                     Déconnexion
@@ -192,12 +248,12 @@ function AppContent() {
             <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6">
               <Bot className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Plateforme AI/ML/Data/Cloud
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              Plateforme AI/ML/Data/Cloud Complète
             </h2>
-            <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
-              Découvrez une plateforme complète avec intelligence artificielle, machine learning, 
-              analytics en temps réel et infrastructure cloud native.
+            <p className="text-gray-600 dark:text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
+              Découvrez une plateforme révolutionnaire avec intelligence artificielle, machine learning, 
+              analytics en temps réel, géolocalisation, gamification et infrastructure cloud native.
             </p>
             <div className="space-x-4">
               <button
@@ -208,12 +264,21 @@ function AppContent() {
               </button>
               <button
                 onClick={() => setAuthModal({ isOpen: true, mode: 'signin' })}
-                className="px-8 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                className="px-8 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
               >
                 Se Connecter
               </button>
             </div>
           </div>
+        ) : activeMode === 'local' ? (
+          /* Local Opportunities */
+          <LocalOpportunities />
+        ) : activeMode === 'search' ? (
+          /* Advanced Search */
+          <AdvancedSearch />
+        ) : activeMode === 'gamification' ? (
+          /* Gamification Panel */
+          <GamificationPanel />
         ) : activeMode === 'analytics' ? (
           /* Real-Time Analytics */
           <RealTimeAnalytics />
@@ -227,10 +292,10 @@ function AppContent() {
           <div className="space-y-8">
             {/* Welcome Message */}
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 {t('welcome.title').replace('{name}', profile.name)}
               </h2>
-              <p className="text-gray-600 text-lg">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
                 {t('welcome.subtitle')}
               </p>
             </div>
@@ -240,17 +305,17 @@ function AppContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <button
                   onClick={() => handleModeChange('career')}
-                  className="group p-8 bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-blue-500 transition-all transform hover:scale-105"
+                  className="group p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition-all transform hover:scale-105"
                 >
                   <div className="text-center">
                     <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                       <Briefcase className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800 mb-3">{t('mode.career.title')}</h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">{t('mode.career.title')}</h3>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                       {t('mode.career.description')}
                     </p>
-                    <div className="mt-4 text-blue-600 font-medium">
+                    <div className="mt-4 text-blue-600 dark:text-blue-400 font-medium">
                       {t('mode.career.cta')}
                     </div>
                   </div>
@@ -258,17 +323,17 @@ function AppContent() {
 
                 <button
                   onClick={() => handleModeChange('startup')}
-                  className="group p-8 bg-white rounded-2xl shadow-lg border-2 border-transparent hover:border-orange-500 transition-all transform hover:scale-105"
+                  className="group p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-transparent hover:border-orange-500 dark:hover:border-orange-400 transition-all transform hover:scale-105"
                 >
                   <div className="text-center">
                     <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                       <Rocket className="w-8 h-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800 mb-3">{t('mode.startup.title')}</h3>
-                    <p className="text-gray-600 leading-relaxed">
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">{t('mode.startup.title')}</h3>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                       {t('mode.startup.description')}
                     </p>
-                    <div className="mt-4 text-orange-600 font-medium">
+                    <div className="mt-4 text-orange-600 dark:text-orange-400 font-medium">
                       {t('mode.startup.cta')}
                     </div>
                   </div>
@@ -277,15 +342,15 @@ function AppContent() {
             )}
 
             {/* Mode Switch Tabs */}
-            {activeMode && !['dashboard', 'analytics'].includes(activeMode) && (
+            {activeMode && !['dashboard', 'analytics', 'search', 'gamification', 'local'].includes(activeMode) && (
               <div className="flex justify-center mb-8">
-                <div className="bg-white rounded-lg p-1 shadow-lg">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-1 shadow-lg">
                   <button
                     onClick={() => handleModeChange('career')}
                     className={`flex items-center px-6 py-3 rounded-md font-medium transition-all ${
                       activeMode === 'career'
                         ? 'bg-blue-500 text-white shadow-md'
-                        : 'text-gray-600 hover:text-gray-900'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                     }`}
                   >
                     <Briefcase className="w-5 h-5 mr-2" />
@@ -296,7 +361,7 @@ function AppContent() {
                     className={`flex items-center px-6 py-3 rounded-md font-medium transition-all ${
                       activeMode === 'startup'
                         ? 'bg-orange-500 text-white shadow-md'
-                        : 'text-gray-600 hover:text-gray-900'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                     }`}
                   >
                     <Rocket className="w-5 h-5 mr-2" />
@@ -321,10 +386,16 @@ function AppContent() {
         onModeChange={(mode) => setAuthModal({ ...authModal, mode })}
       />
 
+      {/* Theme Customizer */}
+      <ThemeCustomizer />
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
+
       {/* Footer */}
-      <footer className="bg-white border-t mt-16">
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-600">
+          <div className="text-center text-gray-600 dark:text-gray-400">
             <p className="mb-2">{t('footer.poweredBy')}</p>
             <p className="text-sm">{t('footer.description')}</p>
           </div>
@@ -337,7 +408,15 @@ function AppContent() {
 function App() {
   return (
     <LanguageProvider>
-      <AppContent />
+      <ThemeProvider>
+        <NotificationProvider>
+          <GamificationProvider>
+            <LocationProvider>
+              <AppContent />
+            </LocationProvider>
+          </GamificationProvider>
+        </NotificationProvider>
+      </ThemeProvider>
     </LanguageProvider>
   );
 }
