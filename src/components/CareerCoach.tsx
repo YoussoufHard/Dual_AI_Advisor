@@ -3,8 +3,10 @@ import { CareerRecommendation, UserProfile } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAnalytics } from '../services/analytics';
 import { generateCareerRecommendation, generateFollowUpResponseStreaming } from '../services/geminiApi';
-import { Briefcase, Target, Calendar, MessageCircle, Send, Loader } from 'lucide-react';
+import { Briefcase, Target, Calendar, MessageCircle, Send, Loader, Brain, BarChart3 } from 'lucide-react';
 import StreamingMessage from './StreamingMessage';
+import MLInsightsPanel from './MLInsights/MLInsightsPanel';
+import SkillsRadarChart from './DataVisualization/SkillsRadarChart';
 
 interface CareerCoachProps {
   profile: UserProfile;
@@ -24,6 +26,7 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [showMLInsights, setShowMLInsights] = useState(false);
 
   const generateRecommendation = async () => {
     setLoading(true);
@@ -141,9 +144,9 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
         <p className="text-gray-600">{t('career.subtitle')}</p>
       </div>
 
-      {/* Generate Recommendation */}
-      {!recommendation && (
-        <div className="text-center">
+      {/* Action Buttons */}
+      <div className="flex justify-center space-x-4">
+        {!recommendation && (
           <button
             onClick={generateRecommendation}
             disabled={loading}
@@ -161,6 +164,62 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
               </>
             )}
           </button>
+        )}
+        
+        {recommendation && (
+          <button
+            onClick={() => setShowMLInsights(!showMLInsights)}
+            className={`inline-flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+              showMLInsights
+                ? 'bg-purple-500 text-white'
+                : 'bg-white text-purple-600 border border-purple-300 hover:bg-purple-50'
+            }`}
+          >
+            <Brain className="w-5 h-5 mr-2" />
+            Insights IA/ML
+          </button>
+        )}
+      </div>
+
+      {/* ML Insights Panel */}
+      {showMLInsights && recommendation && (
+        <MLInsightsPanel profile={profile} mode="career" />
+      )}
+
+      {/* Skills Radar Chart */}
+      {recommendation && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <SkillsRadarChart skills={profile.skills} />
+          
+          {/* Quick Stats */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+              <BarChart3 className="w-5 h-5 mr-2 text-blue-500" />
+              Statistiques Profil
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Compétences totales</span>
+                <span className="font-bold text-blue-600">{profile.skills.length}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Centres d'intérêt</span>
+                <span className="font-bold text-green-600">{profile.interests.length}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Années d'expérience</span>
+                <span className="font-bold text-orange-600">{profile.yearsExperience}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Niveau</span>
+                <span className="font-bold text-purple-600 capitalize">{profile.experienceLevel}</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -3,8 +3,10 @@ import { StartupRecommendation, UserProfile } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAnalytics } from '../services/analytics';
 import { generateStartupRecommendation, generateFollowUpResponseStreaming } from '../services/geminiApi';
-import { Lightbulb, Rocket, DollarSign, TrendingUp, MessageCircle, Send, Loader } from 'lucide-react';
+import { Lightbulb, Rocket, DollarSign, TrendingUp, MessageCircle, Send, Loader, Brain } from 'lucide-react';
 import StreamingMessage from './StreamingMessage';
+import MLInsightsPanel from './MLInsights/MLInsightsPanel';
+import CloudServicesPanel from './CloudIntegration/CloudServicesPanel';
 
 interface StartupCoachProps {
   profile: UserProfile;
@@ -24,6 +26,8 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [showMLInsights, setShowMLInsights] = useState(false);
+  const [showCloudServices, setShowCloudServices] = useState(false);
 
   const generateRecommendation = async () => {
     setLoading(true);
@@ -137,9 +141,9 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
         <p className="text-gray-600">{t('startup.subtitle')}</p>
       </div>
 
-      {/* Generate Recommendation */}
-      {!recommendation && (
-        <div className="text-center">
+      {/* Action Buttons */}
+      <div className="flex justify-center space-x-4">
+        {!recommendation && (
           <button
             onClick={generateRecommendation}
             disabled={loading}
@@ -157,7 +161,45 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
               </>
             )}
           </button>
-        </div>
+        )}
+        
+        {recommendation && (
+          <>
+            <button
+              onClick={() => setShowMLInsights(!showMLInsights)}
+              className={`inline-flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+                showMLInsights
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-white text-purple-600 border border-purple-300 hover:bg-purple-50'
+              }`}
+            >
+              <Brain className="w-5 h-5 mr-2" />
+              Insights IA/ML
+            </button>
+            
+            <button
+              onClick={() => setShowCloudServices(!showCloudServices)}
+              className={`inline-flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+                showCloudServices
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'
+              }`}
+            >
+              <TrendingUp className="w-5 h-5 mr-2" />
+              Infrastructure Cloud
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* ML Insights Panel */}
+      {showMLInsights && recommendation && (
+        <MLInsightsPanel profile={profile} mode="startup" />
+      )}
+
+      {/* Cloud Services Panel */}
+      {showCloudServices && recommendation && (
+        <CloudServicesPanel />
       )}
 
       {/* Recommendation Display */}
