@@ -7,6 +7,7 @@ import { GamificationProvider } from './components/Gamification/GamificationProv
 import { LocationProvider } from './components/Geolocation/LocationProvider';
 import { useAnalytics } from './services/analytics';
 import { useSupabaseAuth, UserService } from './services/supabaseClient';
+import { useSubscription } from './hooks/useSubscription';
 import ProfileForm from './components/ProfileForm';
 import CareerCoach from './components/CareerCoach';
 import StartupCoach from './components/StartupCoach';
@@ -21,11 +22,14 @@ import AdvancedSearch from './components/Search/AdvancedSearch';
 import ExportManager from './components/Export/ExportManager';
 import LocalOpportunities from './components/Geolocation/LocalOpportunities';
 import PWAInstallPrompt from './components/PWA/PWAInstallPrompt';
-import { Briefcase, Rocket, ArrowLeft, Bot, BarChart3, Database, LogIn, LogOut, Search, Trophy, MapPin } from 'lucide-react';
+import PricingPlans from './components/Subscription/PricingPlans';
+import SubscriptionGuard from './components/Subscription/SubscriptionGuard';
+import UsageLimits from './components/Subscription/UsageLimits';
+import { Briefcase, Rocket, ArrowLeft, Bot, BarChart3, Database, LogIn, LogOut, Search, Trophy, MapPin, CreditCard, Crown } from 'lucide-react';
 
 function AppContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [activeMode, setActiveMode] = useState<'career' | 'startup' | 'dashboard' | 'analytics' | 'search' | 'gamification' | 'local' | null>(null);
+  const [activeMode, setActiveMode] = useState<'career' | 'startup' | 'dashboard' | 'analytics' | 'search' | 'gamification' | 'local' | 'subscription' | null>(null);
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'signin' | 'signup' }>({
     isOpen: false,
     mode: 'signin'
@@ -33,6 +37,7 @@ function AppContent() {
   const { t } = useLanguage();
   const analytics = useAnalytics();
   const { user, loading: authLoading, signOut } = useSupabaseAuth();
+  const { subscription, hasReachedLimit, canUseFeature } = useSubscription();
 
   // Charger le profil utilisateur depuis Supabase
   useEffect(() => {
@@ -92,7 +97,13 @@ function AppContent() {
     analytics.trackButtonClick('edit_profile', 'header');
   };
 
-  const handleModeChange = (mode: 'career' | 'startup' | 'dashboard' | 'analytics' | 'search' | 'gamification' | 'local') => {
+  const handleModeChange = (mode: 'career' | 'startup' | 'dashboard' | 'analytics' | 'search' | 'gamification' | 'local' | 'subscription') => {
+    // Vérifier les limites d'usage pour certaines fonctionnalités
+    if ((mode === 'career' || mode === 'startup') && hasReachedLimit('recommendations')) {
+      setActiveMode('subscription');
+      return;
+    }
+
     setActiveMode(mode);
     analytics.trackButtonClick(`switch_to_${mode}`, 'mode_selection');
   };
@@ -105,6 +116,10 @@ function AppContent() {
     } catch (error) {
       console.error('Failed to sign out:', error);
     }
+  };
+
+  const getCurrentPlan = () => {
+    return subscription?.plan || 'free';
   };
 
   if (authLoading) {
@@ -136,6 +151,25 @@ function AppContent() {
               
               {user && (
                 <>
+                  {/* Subscription Status */}
+                  <div className="flex items-center space-x-2">
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      getCurrentPlan() === 'enterprise' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' :
+                      getCurrentPlan() === 'pro' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' :
+                      'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                    }`}>
+                      {getCurrentPlan() === 'enterprise' && <Crown className="w-3 h-3 inline mr-1" />}
+                      Plan {getCurrentPlan().charAt(0).toUpperCase() + getCurrentPlan().slice(1)}
+                    </div>
+                    <button
+                      onClick={() => handleModeChange('subscription')}
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                      title="Gérer l'abonnement"
+                    >
+                      <CreditCard className="w-4 h-4" />
+                    </button>
+                  </div>
+
                   {/* Notifications */}
                   <NotificationCenter />
                   
@@ -153,17 +187,33 @@ function AppContent() {
                   </button>
                   
                   {/* Search */}
-                  <button
-                    onClick={() => handleModeChange('search')}
-                    className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                      activeMode === 'search'
-                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
-                    }`}
+                  <SubscriptionGuard
+                    requiredPlan="pro"
+                    currentPlan={getCurrentPlan()}
+                    feature="Recherche avancée"
+                    fallback={
+                      <button
+                        onClick={() => handleModeChange('subscription')}
+                        className="flex items-center px-4 py-2 rounded-lg transition-colors text-gray-400 cursor-not-allowed"
+                        title="Fonctionnalité Pro"
+                      >
+                        <Search className="w-4 h-4 mr-2" />
+                        Recherche
+                      </button>
+                    }
                   >
-                    <Search className="w-4 h-4 mr-2" />
-                    Recherche
-                  </button>
+                    <button
+                      onClick={() => handleModeChange('search')}
+                      className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                        activeMode === 'search'
+                          ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <Search className="w-4 h-4 mr-2" />
+                      Recherche
+                    </button>
+                  </SubscriptionGuard>
                   
                   {/* Gamification */}
                   <button
@@ -179,33 +229,72 @@ function AppContent() {
                   </button>
                   
                   {/* Analytics Access */}
-                  <button
-                    onClick={() => handleModeChange('analytics')}
-                    className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                      activeMode === 'analytics'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
-                    }`}
+                  <SubscriptionGuard
+                    requiredPlan="pro"
+                    currentPlan={getCurrentPlan()}
+                    feature="Analytics temps réel"
+                    fallback={
+                      <button
+                        onClick={() => handleModeChange('subscription')}
+                        className="flex items-center px-4 py-2 rounded-lg transition-colors text-gray-400 cursor-not-allowed"
+                        title="Fonctionnalité Pro"
+                      >
+                        <Database className="w-4 h-4 mr-2" />
+                        Real-Time
+                      </button>
+                    }
                   >
-                    <Database className="w-4 h-4 mr-2" />
-                    Real-Time
-                  </button>
+                    <button
+                      onClick={() => handleModeChange('analytics')}
+                      className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                        activeMode === 'analytics'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <Database className="w-4 h-4 mr-2" />
+                      Real-Time
+                    </button>
+                  </SubscriptionGuard>
                   
                   {/* Dashboard Access */}
-                  <button
-                    onClick={() => handleModeChange('dashboard')}
-                    className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                      activeMode === 'dashboard'
-                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
-                    }`}
+                  <SubscriptionGuard
+                    requiredPlan="pro"
+                    currentPlan={getCurrentPlan()}
+                    feature="Dashboard analytics"
+                    fallback={
+                      <button
+                        onClick={() => handleModeChange('subscription')}
+                        className="flex items-center px-4 py-2 rounded-lg transition-colors text-gray-400 cursor-not-allowed"
+                        title="Fonctionnalité Pro"
+                      >
+                        <BarChart3 className="w-4 h-4 mr-2" />
+                        Analytics
+                      </button>
+                    }
                   >
-                    <BarChart3 className="w-4 h-4 mr-2" />
-                    Analytics
-                  </button>
+                    <button
+                      onClick={() => handleModeChange('dashboard')}
+                      className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                        activeMode === 'dashboard'
+                          ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Analytics
+                    </button>
+                  </SubscriptionGuard>
                   
                   {/* Export Manager */}
-                  <ExportManager />
+                  <SubscriptionGuard
+                    requiredPlan="pro"
+                    currentPlan={getCurrentPlan()}
+                    feature="Export de données"
+                    fallback={null}
+                  >
+                    <ExportManager />
+                  </SubscriptionGuard>
                   
                   {profile && (
                     <button
@@ -249,11 +338,11 @@ function AppContent() {
               <Bot className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              Plateforme AI/ML/Data/Cloud Complète
+              Plateforme AI/ML/Data/Cloud avec Monétisation
             </h2>
             <p className="text-gray-600 dark:text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
               Découvrez une plateforme révolutionnaire avec intelligence artificielle, machine learning, 
-              analytics en temps réel, géolocalisation, gamification et infrastructure cloud native.
+              analytics en temps réel, géolocalisation, gamification et système de paiement intégré.
             </p>
             <div className="space-x-4">
               <button
@@ -270,26 +359,53 @@ function AppContent() {
               </button>
             </div>
           </div>
+        ) : activeMode === 'subscription' ? (
+          /* Subscription Management */
+          <div className="space-y-8">
+            <PricingPlans currentPlan={getCurrentPlan()} />
+            {user && <UsageLimits />}
+          </div>
         ) : activeMode === 'local' ? (
           /* Local Opportunities */
           <LocalOpportunities />
         ) : activeMode === 'search' ? (
           /* Advanced Search */
-          <AdvancedSearch />
+          <SubscriptionGuard
+            requiredPlan="pro"
+            currentPlan={getCurrentPlan()}
+            feature="Recherche avancée"
+          >
+            <AdvancedSearch />
+          </SubscriptionGuard>
         ) : activeMode === 'gamification' ? (
           /* Gamification Panel */
           <GamificationPanel />
         ) : activeMode === 'analytics' ? (
           /* Real-Time Analytics */
-          <RealTimeAnalytics />
+          <SubscriptionGuard
+            requiredPlan="pro"
+            currentPlan={getCurrentPlan()}
+            feature="Analytics temps réel"
+          >
+            <RealTimeAnalytics />
+          </SubscriptionGuard>
         ) : activeMode === 'dashboard' ? (
           /* Analytics Dashboard */
-          <AdminDashboard />
+          <SubscriptionGuard
+            requiredPlan="pro"
+            currentPlan={getCurrentPlan()}
+            feature="Dashboard analytics"
+          >
+            <AdminDashboard />
+          </SubscriptionGuard>
         ) : !profile ? (
           /* Profile Form */
           <ProfileForm onSubmit={handleProfileSubmit} />
         ) : (
           <div className="space-y-8">
+            {/* Usage Limits Display */}
+            {getCurrentPlan() === 'free' && <UsageLimits />}
+
             {/* Welcome Message */}
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -305,7 +421,10 @@ function AppContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <button
                   onClick={() => handleModeChange('career')}
-                  className="group p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition-all transform hover:scale-105"
+                  disabled={hasReachedLimit('recommendations')}
+                  className={`group p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition-all transform hover:scale-105 ${
+                    hasReachedLimit('recommendations') ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
                   <div className="text-center">
                     <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -316,14 +435,17 @@ function AppContent() {
                       {t('mode.career.description')}
                     </p>
                     <div className="mt-4 text-blue-600 dark:text-blue-400 font-medium">
-                      {t('mode.career.cta')}
+                      {hasReachedLimit('recommendations') ? 'Limite atteinte - Upgrader' : t('mode.career.cta')}
                     </div>
                   </div>
                 </button>
 
                 <button
                   onClick={() => handleModeChange('startup')}
-                  className="group p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-transparent hover:border-orange-500 dark:hover:border-orange-400 transition-all transform hover:scale-105"
+                  disabled={hasReachedLimit('recommendations')}
+                  className={`group p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-transparent hover:border-orange-500 dark:hover:border-orange-400 transition-all transform hover:scale-105 ${
+                    hasReachedLimit('recommendations') ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
                   <div className="text-center">
                     <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
@@ -334,7 +456,7 @@ function AppContent() {
                       {t('mode.startup.description')}
                     </p>
                     <div className="mt-4 text-orange-600 dark:text-orange-400 font-medium">
-                      {t('mode.startup.cta')}
+                      {hasReachedLimit('recommendations') ? 'Limite atteinte - Upgrader' : t('mode.startup.cta')}
                     </div>
                   </div>
                 </button>
@@ -342,7 +464,7 @@ function AppContent() {
             )}
 
             {/* Mode Switch Tabs */}
-            {activeMode && !['dashboard', 'analytics', 'search', 'gamification', 'local'].includes(activeMode) && (
+            {activeMode && !['dashboard', 'analytics', 'search', 'gamification', 'local', 'subscription'].includes(activeMode) && (
               <div className="flex justify-center mb-8">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-1 shadow-lg">
                   <button
@@ -396,7 +518,7 @@ function AppContent() {
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-16 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-600 dark:text-gray-400">
-            <p className="mb-2">{t('footer.poweredBy')}</p>
+            <p className="mb-2">{t('footer.poweredBy')} + Stripe</p>
             <p className="text-sm">{t('footer.description')}</p>
           </div>
         </div>
