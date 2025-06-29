@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 import { User, Briefcase, Target, Star } from 'lucide-react';
 
 interface ProfileFormProps {
@@ -7,6 +8,7 @@ interface ProfileFormProps {
 }
 
 export default function ProfileForm({ onSubmit }: ProfileFormProps) {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
     skills: [],
@@ -62,14 +64,41 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
     }
   };
 
+  const industries = [
+    { value: '', label: t('profile.industry.select') },
+    { value: 'Technology', label: t('profile.industry.technology') },
+    { value: 'Healthcare', label: t('profile.industry.healthcare') },
+    { value: 'Finance', label: t('profile.industry.finance') },
+    { value: 'Education', label: t('profile.industry.education') },
+    { value: 'Marketing', label: t('profile.industry.marketing') },
+    { value: 'Design', label: t('profile.industry.design') },
+    { value: 'Consulting', label: t('profile.industry.consulting') },
+    { value: 'Manufacturing', label: t('profile.industry.manufacturing') },
+    { value: 'Retail', label: t('profile.industry.retail') },
+    { value: 'Other', label: t('profile.industry.other') }
+  ];
+
+  const experienceLevels = [
+    { value: 'beginner', label: t('profile.experienceLevel.beginner') },
+    { value: 'intermediate', label: t('profile.experienceLevel.intermediate') },
+    { value: 'advanced', label: t('profile.experienceLevel.advanced') },
+    { value: 'expert', label: t('profile.experienceLevel.expert') }
+  ];
+
+  const goals = [
+    { value: 'employment', label: t('profile.goals.employment'), icon: Briefcase },
+    { value: 'entrepreneurship', label: t('profile.goals.entrepreneurship'), icon: Star },
+    { value: 'both', label: t('profile.goals.both'), icon: Target }
+  ];
+
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8">
       <div className="text-center mb-8">
         <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
           <User className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Create Your Profile</h2>
-        <p className="text-gray-600">Tell us about yourself to get personalized advice</p>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">{t('profile.title')}</h2>
+        <p className="text-gray-600">{t('profile.subtitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -77,14 +106,14 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name *
+              {t('profile.name')} *
             </label>
             <input
               type="text"
               value={profile.name}
               onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="Enter your full name"
+              placeholder={t('profile.name.placeholder')}
               required
             />
           </div>
@@ -92,20 +121,20 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Current Role
+                {t('profile.currentRole')}
               </label>
               <input
                 type="text"
                 value={profile.currentRole}
                 onChange={(e) => setProfile(prev => ({ ...prev, currentRole: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="e.g., Software Developer"
+                placeholder={t('profile.currentRole.placeholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Years of Experience
+                {t('profile.yearsExperience')}
               </label>
               <input
                 type="number"
@@ -120,24 +149,18 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Preferred Industry
+              {t('profile.industry')}
             </label>
             <select
               value={profile.industry}
               onChange={(e) => setProfile(prev => ({ ...prev, industry: e.target.value }))}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             >
-              <option value="">Select an industry</option>
-              <option value="Technology">Technology</option>
-              <option value="Healthcare">Healthcare</option>
-              <option value="Finance">Finance</option>
-              <option value="Education">Education</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Design">Design</option>
-              <option value="Consulting">Consulting</option>
-              <option value="Manufacturing">Manufacturing</option>
-              <option value="Retail">Retail</option>
-              <option value="Other">Other</option>
+              {industries.map(industry => (
+                <option key={industry.value} value={industry.value}>
+                  {industry.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -145,7 +168,7 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
         {/* Skills */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Skills * (Add at least 3)
+            {t('profile.skills')} * {t('profile.skills.subtitle')}
           </label>
           <div className="flex gap-2 mb-3">
             <input
@@ -154,14 +177,14 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
               onChange={(e) => setSkillInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="e.g., JavaScript, Project Management, Data Analysis"
+              placeholder={t('profile.skills.placeholder')}
             />
             <button
               type="button"
               onClick={addSkill}
               className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
-              Add
+              {t('profile.skills.add')}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -180,7 +203,7 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
         {/* Interests */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Interests * (Add at least 2)
+            {t('profile.interests')} * {t('profile.interests.subtitle')}
           </label>
           <div className="flex gap-2 mb-3">
             <input
@@ -189,14 +212,14 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
               onChange={(e) => setInterestInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addInterest())}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="e.g., AI, Sustainability, Gaming, Travel"
+              placeholder={t('profile.interests.placeholder')}
             />
             <button
               type="button"
               onClick={addInterest}
               className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
             >
-              Add
+              {t('profile.skills.add')}
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -215,14 +238,14 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
         {/* Experience Level */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Experience Level
+            {t('profile.experienceLevel')}
           </label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {['beginner', 'intermediate', 'advanced', 'expert'].map((level) => (
+            {experienceLevels.map((level) => (
               <label
-                key={level}
+                key={level.value}
                 className={`flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${
-                  profile.experienceLevel === level
+                  profile.experienceLevel === level.value
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
@@ -230,12 +253,12 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
                 <input
                   type="radio"
                   name="experienceLevel"
-                  value={level}
-                  checked={profile.experienceLevel === level}
+                  value={level.value}
+                  checked={profile.experienceLevel === level.value}
                   onChange={(e) => setProfile(prev => ({ ...prev, experienceLevel: e.target.value as any }))}
                   className="sr-only"
                 />
-                <span className="capitalize font-medium">{level}</span>
+                <span className="font-medium">{level.label}</span>
               </label>
             ))}
           </div>
@@ -244,14 +267,10 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
         {/* Goals */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Primary Goals
+            {t('profile.goals')}
           </label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {[
-              { value: 'employment', label: 'Find Employment', icon: Briefcase },
-              { value: 'entrepreneurship', label: 'Start a Business', icon: Star },
-              { value: 'both', label: 'Explore Both', icon: Target }
-            ].map(({ value, label, icon: Icon }) => (
+            {goals.map(({ value, label, icon: Icon }) => (
               <label
                 key={value}
                 className={`flex items-center justify-center p-4 border rounded-lg cursor-pointer transition-all ${
@@ -280,7 +299,7 @@ export default function ProfileForm({ onSubmit }: ProfileFormProps) {
           disabled={!profile.name || profile.skills.length < 3 || profile.interests.length < 2}
           className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
-          Get My Personalized Advice
+          {t('profile.submit')}
         </button>
       </form>
     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StartupRecommendation, UserProfile } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 import { generateStartupRecommendation, generateFollowUpResponseStreaming } from '../services/geminiApi';
 import { Lightbulb, Rocket, DollarSign, TrendingUp, MessageCircle, Send, Loader } from 'lucide-react';
 import StreamingMessage from './StreamingMessage';
@@ -15,6 +16,7 @@ interface ChatMessage {
 }
 
 export default function StartupCoach({ profile }: StartupCoachProps) {
+  const { t } = useLanguage();
   const [recommendation, setRecommendation] = useState<StartupRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -94,7 +96,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
         const newMessages = [...prev];
         newMessages[aiMessageIndex] = { 
           type: 'ai', 
-          content: 'I apologize, but I encountered an error. Please try asking your question again.',
+          content: t('common.error'),
           isStreaming: false
         };
         return newMessages;
@@ -111,8 +113,8 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
         <div className="mx-auto w-16 h-16 bg-gradient-to-r from-orange-500 to-pink-600 rounded-full flex items-center justify-center mb-4">
           <Rocket className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Startup Coach</h2>
-        <p className="text-gray-600">Discover your perfect startup idea and business strategy</p>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">{t('startup.title')}</h2>
+        <p className="text-gray-600">{t('startup.subtitle')}</p>
       </div>
 
       {/* Generate Recommendation */}
@@ -126,12 +128,12 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
             {loading ? (
               <>
                 <Loader className="w-5 h-5 mr-2 animate-spin" />
-                Generating Your Startup Idea...
+                {t('startup.generating')}
               </>
             ) : (
               <>
                 <Lightbulb className="w-5 h-5 mr-2" />
-                Get My Startup Recommendation
+                {t('startup.generate')}
               </>
             )}
           </button>
@@ -145,12 +147,12 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
           <div className="bg-gradient-to-r from-orange-50 to-pink-50 rounded-2xl p-6 border border-orange-200">
             <h3 className="text-2xl font-bold text-orange-800 mb-4 flex items-center">
               <Lightbulb className="w-6 h-6 mr-2" />
-              Your Startup Idea
+              {t('startup.idea')}
             </h3>
             <p className="text-gray-700 leading-relaxed mb-6">{recommendation.idea}</p>
             
             <div className="bg-white rounded-lg p-4">
-              <h4 className="font-bold text-gray-800 mb-2">Elevator Pitch</h4>
+              <h4 className="font-bold text-gray-800 mb-2">{t('startup.elevatorPitch')}</h4>
               <p className="text-gray-700 italic">"{recommendation.elevatorPitch}"</p>
             </div>
           </div>
@@ -159,7 +161,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
           <div className="bg-white rounded-2xl p-6 shadow-lg">
             <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <Rocket className="w-6 h-6 mr-2 text-purple-600" />
-              MVP Key Features
+              {t('startup.mvpFeatures')}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {recommendation.mvpFeatures.map((feature, index) => (
@@ -177,7 +179,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
           <div className="bg-white rounded-2xl p-6 shadow-lg">
             <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <DollarSign className="w-6 h-6 mr-2 text-green-600" />
-              Business Model
+              {t('startup.businessModel')}
             </h4>
             <p className="text-gray-700 leading-relaxed">{recommendation.businessModel}</p>
           </div>
@@ -186,7 +188,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
           <div className="bg-white rounded-2xl p-6 shadow-lg">
             <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <TrendingUp className="w-6 h-6 mr-2 text-blue-600" />
-              Go-to-Market Strategy
+              {t('startup.goToMarket')}
             </h4>
             <div className="space-y-3">
               {recommendation.goToMarket.map((strategy, index) => (
@@ -205,14 +207,14 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
             <div className="bg-gradient-to-r from-orange-500 to-pink-600 text-white p-4">
               <h4 className="text-lg font-semibold flex items-center">
                 <MessageCircle className="w-5 h-5 mr-2" />
-                Ask Your Startup Coach
+                {t('startup.chat.title')}
               </h4>
             </div>
             
             <div className="p-4 max-h-96 overflow-y-auto space-y-4">
               {chatMessages.length === 0 && (
                 <div className="text-gray-500 text-center py-8">
-                  Ask me about funding, validation, team building, or any startup challenges!
+                  {t('startup.chat.empty')}
                 </div>
               )}
               
@@ -229,7 +231,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
                 <div className="flex justify-start">
                   <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg flex items-center">
                     <Loader className="w-4 h-4 animate-spin mr-2" />
-                    <span className="text-sm">Thinking...</span>
+                    <span className="text-sm">{t('common.thinking')}</span>
                   </div>
                 </div>
               )}
@@ -241,7 +243,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Ask about funding, validation, marketing strategies..."
+                  placeholder={t('startup.chat.placeholder')}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   disabled={chatLoading}
                 />
@@ -249,6 +251,7 @@ export default function StartupCoach({ profile }: StartupCoachProps) {
                   type="submit"
                   disabled={!chatInput.trim() || chatLoading}
                   className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+                  title={t('common.send')}
                 >
                   <Send className="w-4 h-4" />
                 </button>

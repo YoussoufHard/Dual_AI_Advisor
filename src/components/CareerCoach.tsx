@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CareerRecommendation, UserProfile } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 import { generateCareerRecommendation, generateFollowUpResponseStreaming } from '../services/geminiApi';
 import { Briefcase, Target, Calendar, MessageCircle, Send, Loader } from 'lucide-react';
 import StreamingMessage from './StreamingMessage';
@@ -15,6 +16,7 @@ interface ChatMessage {
 }
 
 export default function CareerCoach({ profile }: CareerCoachProps) {
+  const { t } = useLanguage();
   const [recommendation, setRecommendation] = useState<CareerRecommendation | null>(null);
   const [loading, setLoading] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -98,7 +100,7 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
         const newMessages = [...prev];
         newMessages[aiMessageIndex] = { 
           type: 'ai', 
-          content: 'I apologize, but I encountered an error. Please try asking your question again.',
+          content: t('common.error'),
           isStreaming: false
         };
         return newMessages;
@@ -115,8 +117,8 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
         <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-4">
           <Briefcase className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Career Coach</h2>
-        <p className="text-gray-600">Get personalized career guidance based on your profile</p>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">{t('career.title')}</h2>
+        <p className="text-gray-600">{t('career.subtitle')}</p>
       </div>
 
       {/* Generate Recommendation */}
@@ -130,12 +132,12 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
             {loading ? (
               <>
                 <Loader className="w-5 h-5 mr-2 animate-spin" />
-                Generating Your Career Plan...
+                {t('career.generating')}
               </>
             ) : (
               <>
                 <Target className="w-5 h-5 mr-2" />
-                Get My Career Recommendation
+                {t('career.generate')}
               </>
             )}
           </button>
@@ -158,7 +160,7 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
           <div className="bg-white rounded-2xl p-6 shadow-lg">
             <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <Target className="w-6 h-6 mr-2 text-indigo-600" />
-              Key Skills to Develop
+              {t('career.keySkills')}
             </h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {recommendation.keySkills.map((skill, index) => (
@@ -173,13 +175,13 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
           <div className="bg-white rounded-2xl p-6 shadow-lg">
             <h4 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <Calendar className="w-6 h-6 mr-2 text-green-600" />
-              3-Month Action Plan
+              {t('career.actionPlan')}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {Object.entries(recommendation.actionPlan).map(([month, actions], index) => (
                 <div key={month} className="space-y-3">
-                  <h5 className="font-bold text-lg text-gray-800 capitalize">
-                    Month {index + 1}
+                  <h5 className="font-bold text-lg text-gray-800">
+                    {t('career.month')} {index + 1}
                   </h5>
                   <ul className="space-y-2">
                     {actions.map((action, actionIndex) => (
@@ -199,14 +201,14 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4">
               <h4 className="text-lg font-semibold flex items-center">
                 <MessageCircle className="w-5 h-5 mr-2" />
-                Ask Your Career Coach
+                {t('career.chat.title')}
               </h4>
             </div>
             
             <div className="p-4 max-h-96 overflow-y-auto space-y-4">
               {chatMessages.length === 0 && (
                 <div className="text-gray-500 text-center py-8">
-                  Ask me anything about your career path, skill development, or job search strategies!
+                  {t('career.chat.empty')}
                 </div>
               )}
               
@@ -223,7 +225,7 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
                 <div className="flex justify-start">
                   <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg flex items-center">
                     <Loader className="w-4 h-4 animate-spin mr-2" />
-                    <span className="text-sm">Thinking...</span>
+                    <span className="text-sm">{t('common.thinking')}</span>
                   </div>
                 </div>
               )}
@@ -235,7 +237,7 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Ask about career development, skills, or job search..."
+                  placeholder={t('career.chat.placeholder')}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   disabled={chatLoading}
                 />
@@ -243,6 +245,7 @@ export default function CareerCoach({ profile }: CareerCoachProps) {
                   type="submit"
                   disabled={!chatInput.trim() || chatLoading}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                  title={t('common.send')}
                 >
                   <Send className="w-4 h-4" />
                 </button>
