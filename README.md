@@ -1,10 +1,10 @@
-# 🌟 Plateforme AI/ML/Data/Cloud Complète
+# 🌟 Plateforme AI/ML/Data/Cloud Complète avec Monétisation Stripe
 
-Une plateforme révolutionnaire qui combine **Intelligence Artificielle**, **Machine Learning**, **Analytics Temps Réel**, **Infrastructure Cloud**, et **Expérience Utilisateur Premium** dans une application web moderne et multilingue.
+Une plateforme révolutionnaire qui combine **Intelligence Artificielle**, **Machine Learning**, **Analytics Temps Réel**, **Infrastructure Cloud**, **Monétisation Stripe** et **Expérience Utilisateur Premium** dans une application web moderne et multilingue.
 
 ## 🚀 **APERÇU DE LA PLATEFORME**
 
-Cette plateforme offre une expérience complète de coaching professionnel alimentée par l'IA, avec des fonctionnalités avancées d'analytics, de machine learning, et d'infrastructure cloud native.
+Cette plateforme offre une expérience complète de coaching professionnel alimentée par l'IA, avec des fonctionnalités avancées d'analytics, de machine learning, d'infrastructure cloud native et un système de monétisation complet avec Stripe.
 
 ### **🎯 Fonctionnalités Principales**
 
@@ -12,6 +12,7 @@ Cette plateforme offre une expérience complète de coaching professionnel alime
 - **📊 Analytics Temps Réel** : Tableaux de bord interactifs avec métriques live
 - **🧠 Machine Learning** : Prédictions et recommandations intelligentes
 - **☁️ Infrastructure Cloud** : Monitoring et optimisation automatique
+- **💰 Monétisation Stripe** : Système d'abonnement complet avec 3 plans
 - **🌍 Support Multilingue** : Français/Anglais avec basculement instantané
 - **🔐 Authentification Sécurisée** : Supabase Auth avec RLS
 - **📱 Design Responsive** : Interface adaptative mobile-first
@@ -27,6 +28,89 @@ Cette plateforme offre une expérience complète de coaching professionnel alime
 
 ---
 
+## 💰 **SYSTÈME DE MONÉTISATION STRIPE**
+
+### **📋 Plans d'Abonnement**
+
+#### **🆓 Plan Gratuit**
+- **Prix** : 0€/mois
+- **Fonctionnalités** :
+  - 3 recommandations par mois
+  - 50 messages de chat
+  - Analytics de base
+  - Support communautaire
+  - Accès mobile
+
+#### **⭐ Plan Pro** (Le plus populaire)
+- **Prix** : 19.99€/mois
+- **Fonctionnalités** :
+  - Recommandations illimitées
+  - Chat illimité avec IA
+  - Analytics avancés
+  - Export de données
+  - Support prioritaire
+  - Insights ML personnalisés
+  - Géolocalisation avancée
+
+#### **👑 Plan Enterprise**
+- **Prix** : 99.99€/mois
+- **Fonctionnalités** :
+  - Tout du plan Pro
+  - Gestion d'équipe
+  - Analytics d'équipe
+  - Branding personnalisé
+  - API access
+  - Support dédié
+  - Formation personnalisée
+  - Intégrations sur mesure
+
+### **🔧 Fonctionnalités Stripe Intégrées**
+
+#### **💳 Paiements Sécurisés**
+- **Stripe Checkout** : Interface de paiement optimisée
+- **Gestion des cartes** : Sauvegarde sécurisée des moyens de paiement
+- **Facturation automatique** : Renouvellement automatique des abonnements
+- **Webhooks** : Synchronisation en temps réel des statuts d'abonnement
+
+#### **📊 Gestion des Abonnements**
+- **Customer Portal** : Interface client pour gérer l'abonnement
+- **Changement de plan** : Upgrade/downgrade instantané
+- **Annulation** : Processus d'annulation simplifié
+- **Facturation proratisée** : Calcul automatique des montants
+
+#### **🛡️ Sécurité et Conformité**
+- **PCI DSS** : Conformité aux standards de sécurité
+- **3D Secure** : Authentification renforcée
+- **Détection de fraude** : Protection automatique
+- **RGPD** : Respect de la réglementation européenne
+
+#### **📈 Analytics de Revenus**
+- **MRR Tracking** : Suivi du revenu récurrent mensuel
+- **Churn Analysis** : Analyse du taux d'attrition
+- **LTV Calculation** : Valeur vie client
+- **Conversion Funnel** : Entonnoir de conversion
+
+### **🔒 Contrôle d'Accès par Plan**
+
+#### **SubscriptionGuard Component**
+```typescript
+<SubscriptionGuard 
+  requiredPlan="pro" 
+  currentPlan={userPlan}
+  feature="Analytics avancés"
+>
+  <AdvancedAnalytics />
+</SubscriptionGuard>
+```
+
+#### **Limites d'Usage**
+- **Recommandations** : 3/mois (Gratuit), Illimité (Pro/Enterprise)
+- **Messages Chat** : 50/mois (Gratuit), Illimité (Pro/Enterprise)
+- **Export de données** : Non (Gratuit), Oui (Pro/Enterprise)
+- **Support prioritaire** : Non (Gratuit), Oui (Pro/Enterprise)
+
+---
+
 ## 🏗️ **ARCHITECTURE TECHNIQUE**
 
 ### **Frontend Stack**
@@ -36,6 +120,7 @@ Cette plateforme offre une expérience complète de coaching professionnel alime
   "ui": ["Tailwind CSS 3.4.1", "Framer Motion 10.16.0", "Lucide React 0.344.0"],
   "charts": ["Recharts 2.8.0", "Chart.js", "D3.js"],
   "state": ["Zustand 4.4.7", "React Query 5.17.0"],
+  "payments": ["@stripe/stripe-js 2.4.0"],
   "utils": ["Date-fns 3.0.0", "React Hook Form", "Zod Validation"]
 }
 ```
@@ -45,15 +130,16 @@ Cette plateforme offre une expérience complète de coaching professionnel alime
 {
   "database": ["Supabase PostgreSQL", "Row Level Security", "Real-time Subscriptions"],
   "auth": ["Supabase Auth", "JWT Tokens", "Social Providers"],
+  "payments": ["Stripe API", "Webhooks", "Customer Portal"],
   "ai": ["Google Gemini 2.0 Flash", "OpenAI GPT-4", "Custom ML Models"],
   "cloud": ["Vercel Deployment", "CDN Global", "Edge Functions"],
   "monitoring": ["Real-time Analytics", "Performance Metrics", "Error Tracking"]
 }
 ```
 
-### **Base de Données (13 Tables)**
+### **Base de Données (14 Tables + Stripe)**
 ```sql
-✅ users                    -- Profils utilisateurs enrichis
+✅ users                    -- Profils utilisateurs + colonnes Stripe
 ✅ chat_sessions            -- Conversations IA avec historique
 ✅ skill_assessments        -- Évaluations de compétences ML
 ✅ analytics_events         -- Événements temps réel
@@ -66,402 +152,61 @@ Cette plateforme offre une expérience complète de coaching professionnel alime
 ✅ market_data              -- Insights marché temps réel
 ✅ cloud_metrics            -- Monitoring infrastructure
 ✅ user_preferences         -- Paramètres personnalisés
+✅ chat_conversations       -- Conversations avancées
+
+-- Nouvelles colonnes Stripe dans users:
+✅ stripe_customer_id       -- ID client Stripe
+✅ stripe_subscription_id   -- ID abonnement Stripe
+✅ subscription_status      -- Statut abonnement
+✅ subscription_current_period_end -- Fin période actuelle
 ```
 
 ---
 
-## 🎨 **NOUVELLES FONCTIONNALITÉS PREMIUM**
+## 🛠️ **CONFIGURATION STRIPE**
 
-### **🌙 Système de Thèmes Avancé**
-
-#### **Thèmes Disponibles**
-- **🌞 Light Mode** : Interface claire et moderne
-- **🌙 Dark Mode** : Mode sombre élégant pour les yeux
-- **🎨 Custom Themes** : Créez vos propres palettes de couleurs
-- **🌈 Gradient Themes** : Thèmes avec dégradés dynamiques
-- **🎯 High Contrast** : Accessibilité renforcée
-
-#### **Personnalisation Avancée**
-```typescript
-interface ThemeConfig {
-  mode: 'light' | 'dark' | 'auto';
-  primaryColor: string;
-  accentColor: string;
-  borderRadius: 'none' | 'small' | 'medium' | 'large';
-  fontSize: 'small' | 'medium' | 'large';
-  animations: boolean;
-  reducedMotion: boolean;
-}
-```
-
-### **🔔 Notifications Temps Réel**
-
-#### **Types de Notifications**
-- **📊 Analytics** : Nouvelles métriques et insights
-- **🤖 IA** : Recommandations fraîches disponibles
-- **🎯 Objectifs** : Progression et accomplissements
-- **👥 Social** : Interactions communauté
-- **⚡ Système** : Mises à jour et maintenance
-
-#### **Canaux de Notification**
-- **🔔 In-App** : Notifications dans l'interface
-- **📧 Email** : Résumés personnalisés
-- **📱 Push** : Notifications mobiles (PWA)
-- **🌐 WebSocket** : Temps réel instantané
-
-### **🎓 Système de Gamification**
-
-#### **Système de Points**
-```typescript
-interface UserGamification {
-  totalPoints: number;
-  level: number;
-  badges: Badge[];
-  achievements: Achievement[];
-  streaks: {
-    daily: number;
-    weekly: number;
-    monthly: number;
-  };
-  leaderboard: {
-    position: number;
-    category: string;
-  };
-}
-```
-
-#### **Badges et Accomplissements**
-- **🏆 Explorateur** : Première connexion
-- **🎯 Stratège** : 5 recommandations générées
-- **💬 Communicateur** : 50 messages de chat
-- **📈 Analyste** : Consultation dashboard 10 fois
-- **🌟 Expert** : Profil 100% complété
-- **🔥 Assidu** : Connexion 7 jours consécutifs
-- **🚀 Innovateur** : Première idée startup
-- **👑 Maître** : Niveau 10 atteint
-
-### **📊 Tableaux de Bord Personnalisés**
-
-#### **Widgets Disponibles**
-- **📈 Métriques Personnelles** : KPIs individuels
-- **🎯 Objectifs** : Suivi progression
-- **📊 Analytics** : Graphiques interactifs
-- **🤖 Recommandations IA** : Suggestions récentes
-- **📰 Actualités** : Tendances secteur
-- **🌐 Marché Emploi** : Opportunités locales
-- **📚 Apprentissage** : Cours recommandés
-- **👥 Communauté** : Activité réseau
-
-#### **Configuration Drag & Drop**
-```typescript
-interface DashboardConfig {
-  layout: 'grid' | 'masonry' | 'flex';
-  widgets: Widget[];
-  theme: string;
-  autoRefresh: boolean;
-  refreshInterval: number;
-}
-```
-
-### **🤝 Fonctionnalités Sociales**
-
-#### **Communauté et Partage**
-- **👥 Profils Publics** : Showcase compétences
-- **💬 Forums** : Discussions par secteur
-- **🤝 Mentoring** : Mise en relation mentor/mentoré
-- **📢 Partage** : Recommandations et succès
-- **⭐ Évaluations** : Feedback communauté
-- **🏆 Classements** : Leaderboards sectoriels
-
-#### **Collaboration**
-- **👨‍💼 Équipes** : Groupes de travail
-- **📋 Projets** : Collaboration startup
-- **💡 Brainstorming** : Sessions créatives
-- **📊 Partage Analytics** : Insights collectifs
-
-### **🔍 Recherche Avancée et Filtres**
-
-#### **Moteur de Recherche Intelligent**
-```typescript
-interface SearchConfig {
-  query: string;
-  filters: {
-    category: string[];
-    dateRange: [Date, Date];
-    location: string;
-    experience: string[];
-    skills: string[];
-    industry: string[];
-  };
-  sorting: 'relevance' | 'date' | 'popularity' | 'rating';
-  suggestions: boolean;
-  autoComplete: boolean;
-}
-```
-
-#### **Recherche Contextuelle**
-- **🎯 Recommandations** : Par critères spécifiques
-- **💼 Emplois** : Filtres avancés marché
-- **📚 Formations** : Cours personnalisés
-- **👥 Profils** : Networking ciblé
-- **📊 Analytics** : Métriques spécifiques
-
-### **📊 Export et Rapports Avancés**
-
-#### **Formats d'Export**
-- **📄 PDF** : Rapports professionnels
-- **📊 Excel** : Données analytiques
-- **📋 CSV** : Données brutes
-- **📱 Mobile** : Formats optimisés
-- **🌐 Web** : Partage en ligne
-
-#### **Templates de Rapports**
-```typescript
-interface ReportTemplate {
-  name: string;
-  type: 'career' | 'startup' | 'analytics' | 'custom';
-  sections: ReportSection[];
-  branding: BrandingConfig;
-  scheduling: ScheduleConfig;
-}
-```
-
-### **📱 Progressive Web App (PWA)**
-
-#### **Fonctionnalités PWA**
-- **📱 Installation** : Ajout écran d'accueil
-- **🔄 Synchronisation** : Données hors-ligne
-- **🔔 Notifications** : Push natives
-- **⚡ Performance** : Chargement instantané
-- **📊 Analytics** : Métriques d'usage
-
-#### **Mode Hors-Ligne**
-- **💾 Cache Intelligent** : Données essentielles
-- **🔄 Sync Auto** : Reconnexion automatique
-- **📝 Brouillons** : Sauvegarde locale
-- **🎯 Fonctionnalités Core** : Disponibles offline
-
-### **🌐 Géolocalisation et Localisation**
-
-#### **Services Géolocalisés**
-- **💼 Emplois Locaux** : Opportunités proximité
-- **🏢 Entreprises** : Startups région
-- **🎓 Formations** : Centres formation
-- **👥 Networking** : Événements locaux
-- **📊 Marché Local** : Statistiques région
-
-#### **Adaptation Culturelle**
-```typescript
-interface LocalizationConfig {
-  country: string;
-  region: string;
-  currency: string;
-  dateFormat: string;
-  numberFormat: string;
-  businessCulture: BusinessCultureConfig;
-  legalRequirements: LegalConfig;
-}
-```
-
----
-
-## 🛠️ **ARCHITECTURE AVANCÉE**
-
-### **🔄 State Management Avancé**
-
-#### **Zustand Stores**
-```typescript
-// Theme Store
-interface ThemeStore {
-  theme: ThemeConfig;
-  setTheme: (theme: Partial<ThemeConfig>) => void;
-  toggleDarkMode: () => void;
-  resetTheme: () => void;
-}
-
-// Notification Store
-interface NotificationStore {
-  notifications: Notification[];
-  addNotification: (notification: Notification) => void;
-  markAsRead: (id: string) => void;
-  clearAll: () => void;
-}
-
-// Gamification Store
-interface GamificationStore {
-  userStats: UserGamification;
-  addPoints: (points: number, reason: string) => void;
-  unlockBadge: (badgeId: string) => void;
-  updateStreak: () => void;
-}
-```
-
-### **🔌 Real-time Architecture**
-
-#### **WebSocket Connections**
-```typescript
-interface RealtimeChannels {
-  userEvents: `user-${userId}`;
-  notifications: `notifications-${userId}`;
-  analytics: 'platform-analytics';
-  chat: `chat-${sessionId}`;
-  collaboration: `team-${teamId}`;
-}
-```
-
-### **🧠 Machine Learning Pipeline**
-
-#### **ML Models Intégrés**
-```typescript
-interface MLPipeline {
-  models: {
-    careerRecommendation: MLModel;
-    startupSuccess: MLModel;
-    skillsClassification: MLModel;
-    marketPrediction: MLModel;
-    userBehavior: MLModel;
-  };
-  features: FeatureStore;
-  predictions: PredictionCache;
-  training: TrainingSchedule;
-}
-```
-
----
-
-## 📊 **MÉTRIQUES ET ANALYTICS**
-
-### **🎯 KPIs Plateforme**
-- **👥 Utilisateurs Actifs** : DAU/MAU avec tendances
-- **🎯 Engagement** : Temps session, pages vues
-- **🤖 IA Usage** : Recommandations générées
-- **💬 Interactions** : Messages chat, feedback
-- **🏆 Gamification** : Points, badges, niveaux
-- **📱 PWA** : Installations, usage offline
-- **🌍 Géo** : Répartition géographique
-
-### **📈 Analytics Temps Réel**
-```typescript
-interface RealTimeMetrics {
-  activeUsers: number;
-  currentSessions: number;
-  apiCalls: number;
-  errorRate: number;
-  responseTime: number;
-  conversionRate: number;
-}
-```
-
----
-
-## 🚀 **DÉPLOIEMENT ET INFRASTRUCTURE**
-
-### **☁️ Architecture Cloud Native**
-
-#### **Services Déployés**
-- **🌐 Frontend** : Vercel avec CDN global
-- **🗄️ Database** : Supabase PostgreSQL
-- **🔐 Auth** : Supabase Auth avec RLS
-- **📊 Analytics** : Supabase Real-time
-- **🤖 AI** : Google Gemini API
-- **📱 PWA** : Service Workers optimisés
-
-#### **Performance Optimizations**
-- **⚡ Code Splitting** : Lazy loading composants
-- **🗜️ Bundle Optimization** : Tree shaking avancé
-- **📦 Caching Strategy** : Multi-layer caching
-- **🔄 Preloading** : Ressources critiques
-- **📊 Monitoring** : Real-time performance
-
-### **🔒 Sécurité Enterprise**
-
-#### **Mesures de Sécurité**
-- **🛡️ Row Level Security** : Isolation données
-- **🔐 JWT Tokens** : Authentification sécurisée
-- **🌐 HTTPS** : Chiffrement bout en bout
-- **🔍 Input Validation** : Protection XSS/SQL
-- **📊 Audit Logs** : Traçabilité complète
-- **🚨 Rate Limiting** : Protection DDoS
-
----
-
-## 📱 **EXPÉRIENCE UTILISATEUR**
-
-### **🎨 Design System**
-
-#### **Composants UI Avancés**
-- **🎛️ Dashboard Widgets** : Configurables drag & drop
-- **📊 Charts Interactifs** : Recharts + animations
-- **🔔 Notifications** : Toast + modales
-- **🎨 Theme Picker** : Sélecteur visuel
-- **📱 Mobile Components** : Touch-optimized
-- **♿ Accessibility** : WCAG 2.1 compliant
-
-#### **Animations et Micro-interactions**
-```typescript
-interface AnimationConfig {
-  pageTransitions: boolean;
-  hoverEffects: boolean;
-  loadingStates: boolean;
-  gestureAnimations: boolean;
-  reducedMotion: boolean;
-}
-```
-
-### **🌍 Internationalisation Avancée**
-
-#### **Support Multilingue**
-- **🇫🇷 Français** : Traduction complète
-- **🇬🇧 Anglais** : Interface native
-- **🇪🇸 Espagnol** : En développement
-- **🇩🇪 Allemand** : Planifié
-- **🌐 RTL Support** : Langues droite-à-gauche
-
----
-
-## 🔮 **ROADMAP FUTUR**
-
-### **Phase 1 : Fonctionnalités Core** ✅
-- [x] Authentification Supabase
-- [x] Chat IA streaming
-- [x] Analytics temps réel
-- [x] Thèmes personnalisables
-- [x] Notifications
-- [x] Gamification
-- [x] PWA
-
-### **Phase 2 : Fonctionnalités Sociales** 🚧
-- [ ] Communauté et forums
-- [ ] Système de mentoring
-- [ ] Collaboration équipes
-- [ ] Partage social
-- [ ] Évaluations peer-to-peer
-
-### **Phase 3 : IA Avancée** 🔮
-- [ ] Modèles ML personnalisés
-- [ ] Prédictions marché emploi
-- [ ] Recommandations proactives
-- [ ] Assistant vocal
-- [ ] Computer vision CV
-
-### **Phase 4 : Enterprise** 🏢
-- [ ] Multi-tenant architecture
-- [ ] API publique
-- [ ] Intégrations tierces
-- [ ] White-label solution
-- [ ] Enterprise SSO
-
----
-
-## 🛠️ **INSTALLATION ET CONFIGURATION**
-
-### **Prérequis**
+### **1. Variables d'Environnement**
 ```bash
-Node.js 18+
-npm ou yarn
-Compte Supabase
-Clé API Google Gemini
+# Stripe Configuration
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+
+# Supabase Edge Functions (côté serveur)
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 ```
+
+### **2. Configuration des Prix Stripe**
+1. **Créer les produits** dans le Dashboard Stripe
+2. **Configurer les prix** :
+   - Plan Pro : `price_pro_monthly`
+   - Plan Enterprise : `price_enterprise_monthly`
+3. **Mettre à jour** les Price IDs dans `stripeService.ts`
+
+### **3. Webhooks Stripe**
+```bash
+# URL du webhook (Supabase Edge Function)
+https://your-project.supabase.co/functions/v1/stripe-webhook
+
+# Événements à écouter :
+- customer.subscription.created
+- customer.subscription.updated
+- customer.subscription.deleted
+- invoice.payment_succeeded
+- invoice.payment_failed
+```
+
+### **4. Supabase Edge Functions**
+```bash
+# Déployer les fonctions Edge
+supabase functions deploy stripe-webhook
+supabase functions deploy create-checkout-session
+supabase functions deploy create-portal-session
+supabase functions deploy subscription-status
+```
+
+---
+
+## 🚀 **DÉPLOIEMENT ET CONFIGURATION**
 
 ### **Installation Rapide**
 ```bash
@@ -469,84 +214,158 @@ Clé API Google Gemini
 git clone <repository-url>
 cd ai-ml-platform
 
-# Installer les dépendances
+# Installer les dépendances (inclut Stripe)
 npm install
 
 # Configuration environnement
 cp .env.example .env
-# Ajouter vos clés API
+# Ajouter vos clés Stripe et Supabase
 
 # Démarrer en développement
 npm run dev
 ```
 
-### **Configuration Supabase**
+### **Configuration Supabase + Stripe**
 1. **Créer un projet** sur [supabase.com](https://supabase.com)
-2. **Appliquer les migrations** automatiquement
+2. **Appliquer la migration** `20250629105000_complete_reset.sql`
 3. **Configurer l'authentification** (email/password)
-4. **Activer Real-time** pour les tables
-5. **Copier les clés** dans `.env`
+4. **Déployer les Edge Functions** Stripe
+5. **Configurer les webhooks** Stripe
+6. **Tester les paiements** en mode test
 
-### **Variables d'Environnement**
-```bash
-# Supabase
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# AI APIs
-VITE_GEMINI_API_KEY=your_gemini_key
-VITE_OPENAI_API_KEY=your_openai_key
-
-# Analytics (optionnel)
-VITE_MIXPANEL_TOKEN=your_mixpanel_token
-VITE_GA_TRACKING_ID=your_ga_id
-
-# Géolocalisation
-VITE_MAPBOX_TOKEN=your_mapbox_token
-```
+### **Configuration Stripe**
+1. **Créer un compte** sur [stripe.com](https://stripe.com)
+2. **Récupérer les clés** API (test et production)
+3. **Créer les produits** et prix
+4. **Configurer les webhooks**
+5. **Tester les paiements**
 
 ---
 
-## 📊 **MONITORING ET MAINTENANCE**
+## 💳 **UTILISATION DU SYSTÈME DE PAIEMENT**
 
-### **🔍 Monitoring Intégré**
-- **📈 Performance** : Core Web Vitals
-- **🐛 Erreurs** : Error boundary + logging
-- **👥 Utilisateurs** : Comportement temps réel
-- **🤖 IA** : Qualité recommandations
-- **☁️ Infrastructure** : Santé services
+### **Hook useSubscription**
+```typescript
+const {
+  subscription,
+  usage,
+  loading,
+  canUseFeature,
+  hasReachedLimit,
+  upgradeToProPlan,
+  openCustomerPortal
+} = useSubscription();
 
-### **📋 Maintenance Automatique**
-- **🔄 Backups** : Base données quotidiens
-- **🧹 Cleanup** : Données anciennes
-- **📊 Reports** : Métriques hebdomadaires
-- **🔒 Security** : Scans vulnérabilités
-- **⚡ Optimizations** : Performance auto
+// Vérifier l'accès à une fonctionnalité
+if (canUseFeature('advancedAnalytics')) {
+  // Afficher les analytics avancés
+}
+
+// Vérifier les limites d'usage
+if (hasReachedLimit('recommendations')) {
+  // Afficher le message de limite atteinte
+}
+```
+
+### **Composants de Monétisation**
+- **PricingPlans** : Page de tarification avec sélection de plan
+- **SubscriptionGuard** : Protection des fonctionnalités premium
+- **UsageLimits** : Affichage des limites d'usage
+- **SubscriptionSuccess** : Page de confirmation d'abonnement
+- **SubscriptionCancel** : Page d'annulation
+
+### **Flux de Paiement**
+1. **Sélection du plan** → PricingPlans
+2. **Redirection Stripe** → Checkout sécurisé
+3. **Paiement** → Traitement par Stripe
+4. **Webhook** → Mise à jour base de données
+5. **Confirmation** → SubscriptionSuccess
+6. **Activation** → Fonctionnalités débloquées
 
 ---
 
-## 🤝 **CONTRIBUTION ET SUPPORT**
+## 📊 **MÉTRIQUES BUSINESS**
 
-### **🛠️ Développement**
-```bash
-# Tests
-npm run test
-npm run test:coverage
+### **🎯 KPIs de Monétisation**
+- **MRR** (Monthly Recurring Revenue) : Revenus récurrents mensuels
+- **ARPU** (Average Revenue Per User) : Revenu moyen par utilisateur
+- **Churn Rate** : Taux d'attrition mensuel
+- **LTV** (Lifetime Value) : Valeur vie client
+- **CAC** (Customer Acquisition Cost) : Coût d'acquisition client
+- **Conversion Rate** : Taux de conversion gratuit → payant
 
-# Linting
-npm run lint
-npm run lint:fix
+### **📈 Analytics Avancés**
+- **Funnel de conversion** : Visiteur → Inscription → Abonnement
+- **Cohort Analysis** : Rétention par cohorte d'utilisateurs
+- **Feature Usage** : Utilisation des fonctionnalités par plan
+- **Support Tickets** : Volume et résolution par plan
+- **Satisfaction** : NPS par segment de clientèle
 
-# Build production
-npm run build
-npm run preview
-```
+---
 
-### **📚 Documentation**
-- **🏗️ Architecture** : `/docs/architecture.md`
-- **🎨 Design System** : `/docs/design-system.md`
-- **🔌 API Reference** : `/docs/api.md`
-- **🚀 Deployment** : `/docs/deployment.md`
+## 🔮 **ROADMAP MONÉTISATION**
+
+### **Phase 1 : Fondations** ✅
+- [x] Intégration Stripe complète
+- [x] 3 plans d'abonnement
+- [x] Système de limites d'usage
+- [x] Webhooks et synchronisation
+- [x] Interface de gestion client
+
+### **Phase 2 : Optimisation** 🚧
+- [ ] A/B Testing des prix
+- [ ] Essais gratuits (14 jours)
+- [ ] Codes promo et réductions
+- [ ] Facturation annuelle (-20%)
+- [ ] Add-ons et options
+
+### **Phase 3 : Enterprise** 🔮
+- [ ] Plans sur mesure
+- [ ] Facturation par siège
+- [ ] Contrats annuels
+- [ ] Support dédié
+- [ ] SLA garantis
+
+### **Phase 4 : Marketplace** 🌟
+- [ ] API publique payante
+- [ ] Marketplace de plugins
+- [ ] Commissions sur ventes
+- [ ] Programme d'affiliation
+- [ ] White-label solutions
+
+---
+
+## 🎯 **MÉTRIQUES DE SUCCÈS**
+
+### **💰 Objectifs Financiers**
+- **MRR** : 10k€/mois en 6 mois
+- **Conversion** : 15% gratuit → payant
+- **Churn** : <5% mensuel
+- **ARPU** : 35€/mois
+- **LTV/CAC** : >3:1
+
+### **📊 Objectifs Produit**
+- **Satisfaction** : NPS >50
+- **Usage** : 80% des fonctionnalités utilisées (Pro)
+- **Support** : <2h temps de réponse (Pro)
+- **Uptime** : 99.9% disponibilité
+- **Performance** : <2s temps de chargement
+
+---
+
+## 🤝 **SUPPORT ET DOCUMENTATION**
+
+### **📚 Documentation Stripe**
+- **[Stripe Docs](https://stripe.com/docs)** : Documentation officielle
+- **[Webhooks Guide](https://stripe.com/docs/webhooks)** : Guide des webhooks
+- **[Testing](https://stripe.com/docs/testing)** : Cartes de test
+- **[Security](https://stripe.com/docs/security)** : Bonnes pratiques
+
+### **🛠️ Outils de Développement**
+- **Stripe CLI** : Test des webhooks en local
+- **Dashboard Stripe** : Monitoring des paiements
+- **Logs Supabase** : Debugging des Edge Functions
+- **Analytics** : Métriques de conversion
 
 ### **🐛 Support**
 - **📧 Email** : support@ai-platform.com
@@ -556,45 +375,24 @@ npm run preview
 
 ---
 
-## 📄 **LICENCE ET CRÉDITS**
-
-### **📜 Licence**
-Ce projet est sous licence **MIT**. Voir le fichier `LICENSE` pour plus de détails.
-
-### **🙏 Remerciements**
-- **🤖 Google Gemini** : API IA générative
-- **🗄️ Supabase** : Backend-as-a-Service
-- **⚛️ React Ecosystem** : Framework et outils
-- **🎨 Tailwind CSS** : Framework CSS
-- **📊 Recharts** : Bibliothèque graphiques
-- **🔔 Lucide** : Icônes élégantes
-
-### **👥 Équipe**
-- **🏗️ Architecture** : Équipe technique senior
-- **🎨 Design** : Designers UX/UI experts
-- **🤖 IA/ML** : Spécialistes machine learning
-- **☁️ DevOps** : Ingénieurs infrastructure
-- **📊 Data** : Analystes données
-
----
-
 ## 🌟 **CONCLUSION**
 
-Cette plateforme représente l'état de l'art en matière de **coaching professionnel alimenté par l'IA**, combinant :
+Cette plateforme représente maintenant l'état de l'art en matière de **SaaS B2C avec monétisation complète**, combinant :
 
 - **🤖 Intelligence Artificielle** de pointe
 - **📊 Analytics temps réel** avancés
+- **💰 Monétisation Stripe** professionnelle
 - **🎨 Expérience utilisateur** premium
 - **☁️ Infrastructure cloud** native
 - **🔒 Sécurité enterprise** robuste
 - **🌍 Accessibilité** universelle
 
-**Prêt pour la production** avec toutes les fonctionnalités modernes attendues d'une plateforme SaaS de niveau entreprise ! 🚀
+**Prêt pour la production et la monétisation** avec un système d'abonnement complet, des paiements sécurisés et toutes les fonctionnalités modernes attendues d'une plateforme SaaS de niveau entreprise ! 🚀
 
 ---
 
 *Développé avec ❤️ et IA par l'équipe AI/ML Platform*
 
-**🌟 Version 2.0 - Plateforme Complète AI/ML/Data/Cloud** 
+**🌟 Version 3.0 - Plateforme Complète avec Monétisation Stripe** 
 
-*Maintenant avec toutes les fonctionnalités premium intégrées !*
+*Maintenant avec un système de paiement professionnel intégré !*
