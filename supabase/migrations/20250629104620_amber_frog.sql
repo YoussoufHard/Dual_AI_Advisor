@@ -1,0 +1,636 @@
+/*
+  # Complete AI/ML/Data/Cloud Platform Schema
+
+  1. New Tables
+    - Enhanced users table with ML features
+    - user_sessions for analytics tracking
+    - recommendations for AI/ML results storage
+    - user_interactions for detailed behavior tracking
+    - ml_predictions for ML model results
+    - analytics_events for real-time event tracking
+    - skill_classifications for ML-powered skill categorization
+    - market_data for job market insights
+    - cloud_metrics for infrastructure monitoring
+    - chat_conversations for AI chat history
+
+  2. Security
+    - Enable RLS on all user-related tables
+    - Granular policies for data access control
+    - Admin-only access for sensitive metrics
+
+  3. Performance
+    - Comprehensive indexing strategy
+    - GIN indexes for JSONB search
+    - Materialized views for analytics
+    - Optimized functions for real-time calculations
+*/
+
+-- Enable required extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+
+-- Drop existing policies to avoid conflicts
+DO $$ 
+BEGIN
+  -- Drop all existing policies for clean slate
+  DROP POLICY IF EXISTS "Users can read own profile" ON users;
+  DROP POLICY IF EXISTS "Users can update own profile" ON users;
+  DROP POLICY IF EXISTS "Users can insert own profile" ON users;
+  DROP POLICY IF EXISTS "users_select_own" ON users;
+  DROP POLICY IF EXISTS "users_update_own" ON users;
+  DROP POLICY IF EXISTS "users_insert_own" ON users;
+EXCEPTION
+  WHEN undefined_table THEN NULL;
+  WHEN undefined_object THEN NULL;
+END $$;
+
+-- Add missing columns to existing users table
+DO $$
+BEGIN
+  -- Add columns that might be missing from existing users table
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS name text;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url text;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS role_title text;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS years_experience integer DEFAULT 0;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS experience_level text DEFAULT 'beginner';
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS industry text;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS goals text DEFAULT 'both';
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS skills jsonb DEFAULT '[]'::jsonb;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS interests jsonb DEFAULT '[]'::jsonb;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences jsonb DEFAULT '{}'::jsonb;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at timestamptz DEFAULT now();
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true;
+  EXCEPTION
+    WHEN duplicate_column THEN NULL;
+  END;
+END $$;
+
+-- Add constraints to users table
+DO $$
+BEGIN
+  -- Add check constraints if they don't exist
+  BEGIN
+    ALTER TABLE users ADD CONSTRAINT users_experience_level_check 
+    CHECK (experience_level IN ('beginner', 'intermediate', 'advanced', 'expert'));
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END;
+  
+  BEGIN
+    ALTER TABLE users ADD CONSTRAINT users_goals_check 
+    CHECK (goals IN ('employment', 'entrepreneurship', 'both'));
+  EXCEPTION
+    WHEN duplicate_object THEN NULL;
+  END;
+END $$;
+
+-- User sessions for analytics
+CREATE TABLE IF NOT EXISTS user_sessions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  session_id text NOT NULL,
+  started_at timestamptz DEFAULT now(),
+  ended_at timestamptz,
+  duration_seconds integer,
+  page_views integer DEFAULT 0,
+  interactions integer DEFAULT 0,
+  device_info jsonb DEFAULT '{}'::jsonb,
+  location_info jsonb DEFAULT '{}'::jsonb,
+  referrer text,
+  user_agent text
+);
+
+-- AI/ML Recommendations storage
+CREATE TABLE IF NOT EXISTS recommendations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  recommendation_type text CHECK (recommendation_type IN ('career', 'startup')) NOT NULL,
+  model_id text NOT NULL,
+  input_data jsonb NOT NULL,
+  output_data jsonb NOT NULL,
+  confidence_score decimal(3,2) CHECK (confidence_score >= 0 AND confidence_score <= 1),
+  feedback text CHECK (feedback IN ('positive', 'negative', 'neutral')),
+  implementation_status text CHECK (implementation_status IN ('not_started', 'in_progress', 'completed')) DEFAULT 'not_started',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Detailed user interactions tracking
+CREATE TABLE IF NOT EXISTS user_interactions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  session_id text NOT NULL,
+  event_type text NOT NULL,
+  event_data jsonb DEFAULT '{}'::jsonb,
+  page_url text,
+  element_id text,
+  event_timestamp timestamptz DEFAULT now(),
+  processing_time_ms integer
+);
+
+-- ML Predictions and model results
+CREATE TABLE IF NOT EXISTS ml_predictions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  model_id text NOT NULL,
+  model_version text NOT NULL,
+  prediction_type text NOT NULL,
+  input_features jsonb NOT NULL,
+  prediction_result jsonb NOT NULL,
+  confidence_score decimal(3,2),
+  execution_time_ms integer,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Real-time analytics events
+CREATE TABLE IF NOT EXISTS analytics_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
+  session_id text,
+  event_name text NOT NULL,
+  event_properties jsonb DEFAULT '{}'::jsonb,
+  event_timestamp timestamptz DEFAULT now(),
+  processed boolean DEFAULT false
+);
+
+-- ML-classified skills
+CREATE TABLE IF NOT EXISTS skill_classifications (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  skill_name text UNIQUE NOT NULL,
+  category text NOT NULL,
+  subcategory text,
+  market_demand_score decimal(3,2),
+  rarity_score decimal(3,2),
+  growth_trend text CHECK (growth_trend IN ('increasing', 'stable', 'decreasing')),
+  related_skills jsonb DEFAULT '[]'::jsonb,
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Market data and insights
+CREATE TABLE IF NOT EXISTS market_data (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  industry text NOT NULL,
+  region text DEFAULT 'global',
+  job_title text,
+  average_salary_min integer,
+  average_salary_max integer,
+  demand_level text CHECK (demand_level IN ('low', 'medium', 'high', 'very_high')),
+  growth_rate decimal(4,2),
+  required_skills jsonb DEFAULT '[]'::jsonb,
+  data_source text,
+  collected_at timestamptz DEFAULT now(),
+  UNIQUE(industry, job_title, region)
+);
+
+-- Cloud infrastructure metrics
+CREATE TABLE IF NOT EXISTS cloud_metrics (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  service_name text NOT NULL,
+  provider text NOT NULL,
+  metric_type text NOT NULL,
+  metric_value decimal(10,2),
+  unit_type text,
+  cost_usd decimal(10,2),
+  metric_timestamp timestamptz DEFAULT now(),
+  metadata jsonb DEFAULT '{}'::jsonb
+);
+
+-- Chat conversations
+CREATE TABLE IF NOT EXISTS chat_conversations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  recommendation_id uuid REFERENCES recommendations(id) ON DELETE SET NULL,
+  conversation_mode text CHECK (conversation_mode IN ('career', 'startup')) NOT NULL,
+  messages jsonb DEFAULT '[]'::jsonb,
+  started_at timestamptz DEFAULT now(),
+  last_message_at timestamptz DEFAULT now(),
+  message_count integer DEFAULT 0,
+  satisfaction_rating integer CHECK (satisfaction_rating >= 1 AND satisfaction_rating <= 5)
+);
+
+-- Enable Row Level Security
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recommendations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_interactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ml_predictions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_conversations ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for users
+CREATE POLICY "users_select_own" ON users
+  FOR SELECT TO authenticated
+  USING (auth.uid() = id);
+
+CREATE POLICY "users_update_own" ON users
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = id);
+
+CREATE POLICY "users_insert_own" ON users
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = id);
+
+-- RLS Policies for user_sessions
+CREATE POLICY "user_sessions_select_own" ON user_sessions
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "user_sessions_insert_own" ON user_sessions
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "user_sessions_update_own" ON user_sessions
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- RLS Policies for recommendations
+CREATE POLICY "recommendations_select_own" ON recommendations
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "recommendations_insert_own" ON recommendations
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "recommendations_update_own" ON recommendations
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- RLS Policies for user interactions
+CREATE POLICY "user_interactions_select_own" ON user_interactions
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "user_interactions_insert_own" ON user_interactions
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+-- RLS Policies for ML predictions
+CREATE POLICY "ml_predictions_select_own" ON ml_predictions
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "ml_predictions_insert_own" ON ml_predictions
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+-- RLS Policies for analytics events
+CREATE POLICY "analytics_events_select_own" ON analytics_events
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "analytics_events_insert_own" ON analytics_events
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "analytics_events_insert_anon" ON analytics_events
+  FOR INSERT TO anon
+  WITH CHECK (user_id IS NULL);
+
+-- RLS Policies for chat conversations
+CREATE POLICY "chat_conversations_select_own" ON chat_conversations
+  FOR SELECT TO authenticated
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "chat_conversations_insert_own" ON chat_conversations
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "chat_conversations_update_own" ON chat_conversations
+  FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id);
+
+-- Public read access for reference data
+CREATE POLICY "skill_classifications_select_all" ON skill_classifications
+  FOR SELECT TO authenticated
+  USING (true);
+
+CREATE POLICY "market_data_select_all" ON market_data
+  FOR SELECT TO authenticated
+  USING (true);
+
+-- Admin policies for cloud metrics
+CREATE POLICY "cloud_metrics_admin_select" ON cloud_metrics
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM users 
+      WHERE id = auth.uid() 
+      AND (metadata->>'role')::text = 'admin'
+    )
+  );
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_industry ON users(industry);
+CREATE INDEX IF NOT EXISTS idx_users_experience_level ON users(experience_level);
+CREATE INDEX IF NOT EXISTS idx_users_last_active ON users(last_active_at);
+
+CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_sessions_started_at ON user_sessions(started_at);
+
+CREATE INDEX IF NOT EXISTS idx_recommendations_user_id ON recommendations(user_id);
+CREATE INDEX IF NOT EXISTS idx_recommendations_type ON recommendations(recommendation_type);
+CREATE INDEX IF NOT EXISTS idx_recommendations_created_at ON recommendations(created_at);
+
+CREATE INDEX IF NOT EXISTS idx_user_interactions_user_id ON user_interactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_interactions_event_type ON user_interactions(event_type);
+CREATE INDEX IF NOT EXISTS idx_user_interactions_timestamp ON user_interactions(event_timestamp);
+
+CREATE INDEX IF NOT EXISTS idx_ml_predictions_user_id ON ml_predictions(user_id);
+CREATE INDEX IF NOT EXISTS idx_ml_predictions_model_id ON ml_predictions(model_id);
+CREATE INDEX IF NOT EXISTS idx_ml_predictions_created_at ON ml_predictions(created_at);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_events_user_id ON analytics_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_event_name ON analytics_events(event_name);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_timestamp ON analytics_events(event_timestamp);
+
+CREATE INDEX IF NOT EXISTS idx_skill_classifications_category ON skill_classifications(category);
+CREATE INDEX IF NOT EXISTS idx_skill_classifications_skill_name ON skill_classifications(skill_name);
+
+CREATE INDEX IF NOT EXISTS idx_market_data_industry ON market_data(industry);
+CREATE INDEX IF NOT EXISTS idx_market_data_job_title ON market_data(job_title);
+
+CREATE INDEX IF NOT EXISTS idx_cloud_metrics_service_name ON cloud_metrics(service_name);
+CREATE INDEX IF NOT EXISTS idx_cloud_metrics_timestamp ON cloud_metrics(metric_timestamp);
+
+CREATE INDEX IF NOT EXISTS idx_chat_conversations_user_id ON chat_conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_conversations_started_at ON chat_conversations(started_at);
+
+-- GIN indexes for JSONB columns
+CREATE INDEX IF NOT EXISTS idx_users_skills_gin ON users USING gin(skills);
+CREATE INDEX IF NOT EXISTS idx_users_interests_gin ON users USING gin(interests);
+CREATE INDEX IF NOT EXISTS idx_users_metadata_gin ON users USING gin(metadata);
+CREATE INDEX IF NOT EXISTS idx_recommendations_input_gin ON recommendations USING gin(input_data);
+CREATE INDEX IF NOT EXISTS idx_recommendations_output_gin ON recommendations USING gin(output_data);
+CREATE INDEX IF NOT EXISTS idx_user_interactions_data_gin ON user_interactions USING gin(event_data);
+CREATE INDEX IF NOT EXISTS idx_ml_predictions_features_gin ON ml_predictions USING gin(input_features);
+CREATE INDEX IF NOT EXISTS idx_ml_predictions_result_gin ON ml_predictions USING gin(prediction_result);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_properties_gin ON analytics_events USING gin(event_properties);
+
+-- Functions for analytics
+CREATE OR REPLACE FUNCTION update_user_last_active()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE users 
+  SET last_active_at = now(), updated_at = now()
+  WHERE id = NEW.user_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to update user activity
+DROP TRIGGER IF EXISTS trigger_update_user_activity ON user_interactions;
+CREATE TRIGGER trigger_update_user_activity
+  AFTER INSERT ON user_interactions
+  FOR EACH ROW
+  EXECUTE FUNCTION update_user_last_active();
+
+-- Function to calculate user engagement score
+CREATE OR REPLACE FUNCTION calculate_user_engagement(user_uuid uuid)
+RETURNS decimal AS $$
+DECLARE
+  engagement_score decimal := 0;
+  session_count integer;
+  interaction_count integer;
+  recommendation_count integer;
+BEGIN
+  -- Count sessions in last 30 days
+  SELECT COUNT(*) INTO session_count
+  FROM user_sessions
+  WHERE user_id = user_uuid
+  AND started_at > now() - interval '30 days';
+  
+  -- Count interactions in last 30 days
+  SELECT COUNT(*) INTO interaction_count
+  FROM user_interactions
+  WHERE user_id = user_uuid
+  AND event_timestamp > now() - interval '30 days';
+  
+  -- Count recommendations generated
+  SELECT COUNT(*) INTO recommendation_count
+  FROM recommendations
+  WHERE user_id = user_uuid;
+  
+  -- Calculate engagement score (0-1)
+  engagement_score := LEAST(
+    (session_count * 0.3 + interaction_count * 0.01 + recommendation_count * 0.5) / 10,
+    1.0
+  );
+  
+  RETURN engagement_score;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get user analytics summary
+CREATE OR REPLACE FUNCTION get_user_analytics_summary(user_uuid uuid)
+RETURNS jsonb AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  SELECT jsonb_build_object(
+    'total_sessions', (
+      SELECT COUNT(*) FROM user_sessions WHERE user_id = user_uuid
+    ),
+    'total_interactions', (
+      SELECT COUNT(*) FROM user_interactions WHERE user_id = user_uuid
+    ),
+    'total_recommendations', (
+      SELECT COUNT(*) FROM recommendations WHERE user_id = user_uuid
+    ),
+    'engagement_score', calculate_user_engagement(user_uuid),
+    'last_active', (
+      SELECT last_active_at FROM users WHERE id = user_uuid
+    ),
+    'avg_session_duration', (
+      SELECT AVG(duration_seconds) FROM user_sessions 
+      WHERE user_id = user_uuid AND duration_seconds IS NOT NULL
+    ),
+    'favorite_skills', (
+      SELECT skills FROM users WHERE id = user_uuid
+    ),
+    'preferred_industry', (
+      SELECT industry FROM users WHERE id = user_uuid
+    )
+  ) INTO result;
+  
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get platform analytics
+CREATE OR REPLACE FUNCTION get_platform_analytics()
+RETURNS jsonb AS $$
+DECLARE
+  result jsonb;
+BEGIN
+  SELECT jsonb_build_object(
+    'total_users', (SELECT COUNT(*) FROM users),
+    'active_users_today', (
+      SELECT COUNT(*) FROM users 
+      WHERE last_active_at > now() - interval '1 day'
+    ),
+    'active_users_week', (
+      SELECT COUNT(*) FROM users 
+      WHERE last_active_at > now() - interval '7 days'
+    ),
+    'active_users_month', (
+      SELECT COUNT(*) FROM users 
+      WHERE last_active_at > now() - interval '30 days'
+    ),
+    'total_recommendations', (SELECT COUNT(*) FROM recommendations),
+    'total_interactions', (SELECT COUNT(*) FROM user_interactions),
+    'avg_engagement_score', (
+      SELECT AVG(calculate_user_engagement(id)) FROM users
+    ),
+    'top_industries', (
+      SELECT jsonb_agg(
+        jsonb_build_object('industry', industry, 'count', count)
+      )
+      FROM (
+        SELECT industry, COUNT(*) as count
+        FROM users 
+        WHERE industry IS NOT NULL
+        GROUP BY industry
+        ORDER BY count DESC
+        LIMIT 5
+      ) t
+    ),
+    'top_skills', (
+      SELECT jsonb_agg(
+        jsonb_build_object('skill', skill_name, 'count', count)
+      )
+      FROM (
+        SELECT skill_name, COUNT(*) as count
+        FROM skill_classifications
+        ORDER BY market_demand_score DESC
+        LIMIT 10
+      ) t
+    )
+  ) INTO result;
+  
+  RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Materialized view for dashboard analytics
+DROP MATERIALIZED VIEW IF EXISTS dashboard_analytics;
+CREATE MATERIALIZED VIEW dashboard_analytics AS
+SELECT 
+  DATE_TRUNC('day', created_at) as date,
+  COUNT(*) as new_users,
+  COUNT(*) FILTER (WHERE last_active_at > now() - interval '1 day') as active_users,
+  AVG(years_experience) as avg_experience,
+  mode() WITHIN GROUP (ORDER BY industry) as top_industry,
+  mode() WITHIN GROUP (ORDER BY experience_level) as top_experience_level
+FROM users
+WHERE created_at > now() - interval '90 days'
+  AND industry IS NOT NULL
+  AND experience_level IS NOT NULL
+GROUP BY DATE_TRUNC('day', created_at)
+ORDER BY date DESC;
+
+-- Create unique index on materialized view
+CREATE UNIQUE INDEX IF NOT EXISTS idx_dashboard_analytics_date ON dashboard_analytics(date);
+
+-- Refresh materialized view function
+CREATE OR REPLACE FUNCTION refresh_dashboard_analytics()
+RETURNS void AS $$
+BEGIN
+  REFRESH MATERIALIZED VIEW CONCURRENTLY dashboard_analytics;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Insert sample data for development
+INSERT INTO skill_classifications (skill_name, category, subcategory, market_demand_score, rarity_score, growth_trend) VALUES
+('JavaScript', 'Technical', 'Programming Languages', 0.95, 0.20, 'stable'),
+('Python', 'Technical', 'Programming Languages', 0.98, 0.25, 'increasing'),
+('React', 'Technical', 'Frontend Frameworks', 0.90, 0.30, 'increasing'),
+('Machine Learning', 'Technical', 'AI/ML', 0.99, 0.70, 'increasing'),
+('Leadership', 'Soft Skills', 'Management', 0.85, 0.40, 'stable'),
+('Communication', 'Soft Skills', 'Interpersonal', 0.80, 0.15, 'stable'),
+('Data Analysis', 'Technical', 'Analytics', 0.92, 0.45, 'increasing'),
+('Cloud Architecture', 'Technical', 'Infrastructure', 0.94, 0.65, 'increasing'),
+('UI/UX Design', 'Creative', 'Design', 0.88, 0.35, 'increasing'),
+('Project Management', 'Soft Skills', 'Management', 0.82, 0.25, 'stable')
+ON CONFLICT (skill_name) DO NOTHING;
+
+INSERT INTO market_data (industry, job_title, average_salary_min, average_salary_max, demand_level, growth_rate, required_skills) VALUES
+('Technology', 'Software Engineer', 60000, 120000, 'very_high', 15.5, '["JavaScript", "Python", "React"]'),
+('Technology', 'Data Scientist', 70000, 140000, 'very_high', 22.3, '["Python", "Machine Learning", "Data Analysis"]'),
+('Technology', 'Product Manager', 80000, 150000, 'high', 12.8, '["Leadership", "Communication", "Project Management"]'),
+('Healthcare', 'Health Data Analyst', 55000, 95000, 'high', 18.2, '["Data Analysis", "Healthcare Knowledge"]'),
+('Finance', 'Financial Analyst', 50000, 90000, 'medium', 8.5, '["Data Analysis", "Financial Modeling"]'),
+('Marketing', 'Digital Marketing Manager', 45000, 85000, 'high', 14.2, '["Communication", "Data Analysis", "Creative Thinking"]')
+ON CONFLICT (industry, job_title, region) DO NOTHING;
+
+-- Insert sample cloud metrics
+INSERT INTO cloud_metrics (service_name, provider, metric_type, metric_value, unit_type, cost_usd) VALUES
+('Compute Engine', 'Google Cloud', 'CPU Usage', 75.5, 'percentage', 245.50),
+('Cloud SQL', 'Google Cloud', 'Storage Usage', 65.2, 'GB', 89.30),
+('AI Platform', 'Google Cloud', 'API Calls', 15420, 'requests', 156.80),
+('Cloud Storage', 'Google Cloud', 'Storage Usage', 1024.5, 'GB', 23.45),
+('BigQuery', 'Google Cloud', 'Data Processed', 2.5, 'TB', 78.90),
+('Cloud Security', 'Google Cloud', 'Scans Performed', 1250, 'scans', 45.60);
